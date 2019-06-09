@@ -79,9 +79,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
         vol.Optional(CONF_SUNRISE_TIME): cv.time,
         vol.Optional(CONF_SUNSET_TIME): cv.time,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_ELEVATION): float,
         vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
         vol.Optional(ATTR_TRANSITION, default=DEFAULT_TRANSITION): VALID_TRANSITION
     }),
@@ -97,10 +94,6 @@ def setup(hass, config):
     sunrise_time = conf.get(CONF_SUNRISE_TIME)
     sunset_time = conf.get(CONF_SUNSET_TIME)
 
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
-
     load_platform(hass, 'sensor', DOMAIN, {}, config)
 
     interval = conf.get(CONF_INTERVAL)
@@ -108,7 +101,6 @@ def setup(hass, config):
 
     cl = CircadianLighting(hass, min_colortemp, max_colortemp,
                     sunrise_offset, sunset_offset, sunrise_time, sunset_time,
-                    latitude, longitude, elevation,
                     interval, transition)
 
     hass.data[DATA_CIRCADIAN_LIGHTING] = cl
@@ -120,7 +112,6 @@ class CircadianLighting(object):
 
     def __init__(self, hass, min_colortemp, max_colortemp,
                     sunrise_offset, sunset_offset, sunrise_time, sunset_time,
-                    latitude, longitude, elevation,
                     interval, transition):
         self.hass = hass
         self.data = {}
@@ -130,9 +121,6 @@ class CircadianLighting(object):
         self.data['sunset_offset'] = sunset_offset
         self.data['sunrise_time'] = sunrise_time
         self.data['sunset_time'] = sunset_time
-        self.data['latitude'] = latitude
-        self.data['longitude'] = longitude
-        self.data['elevation'] = elevation
         self.data['interval'] = interval
         self.data['transition'] = transition
         self.data['percent'] = self.calc_percent()
@@ -166,9 +154,9 @@ class CircadianLighting(object):
             location = astral.Location()
             location.name = 'name'
             location.region = 'region'
-            location.latitude = self.data['latitude']
-            location.longitude = self.data['longitude']
-            location.elevation = self.data['elevation']
+            location.latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
+            location.longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+            location.elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
             _LOGGER.debug("Astral location: " + str(location))
             if self.data['sunrise_time'] is not None:
                 if date is None:
