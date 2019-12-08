@@ -58,11 +58,11 @@ CIRCADIAN_LIGHTING_UPDATE_TOPIC = '{0}_update'.format(DOMAIN)
 DATA_CIRCADIAN_LIGHTING = 'data_cl'
 
 CONF_MIN_CT = 'min_colortemp'
-DEFAULT_MIN_CT = 2200
+DEFAULT_MIN_CT = 2500
 CONF_MAX_CT = 'max_colortemp'
 DEFAULT_MAX_CT = 5500
 CONF_TRANS_CT = 'transition_colortemp'
-DEFAULT_TRANS_CT = 2700
+#DEFAULT_TRANS_CT is the value of CONF_MIN_CT for backwards compatibility
 CONF_SUNRISE_OFFSET = 'sunrise_offset'
 CONF_SUNSET_OFFSET = 'sunset_offset'
 CONF_SUNRISE_TIME = 'sunrise_time'
@@ -77,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
-        vol.Optional(CONF_TRANS_CT, default=DEFAULT_TRANS_CT):
+        vol.Optional(CONF_TRANS_CT, default=CONF_MIN_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_SUNRISE_OFFSET): cv.time_period_str,
         vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
