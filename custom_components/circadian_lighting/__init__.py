@@ -58,9 +58,11 @@ CIRCADIAN_LIGHTING_UPDATE_TOPIC = '{0}_update'.format(DOMAIN)
 DATA_CIRCADIAN_LIGHTING = 'data_cl'
 
 CONF_MIN_CT = 'min_colortemp'
-DEFAULT_MIN_CT = 2500
+DEFAULT_MIN_CT = 2200
 CONF_MAX_CT = 'max_colortemp'
 DEFAULT_MAX_CT = 5500
+CONF_TRANS_CT = 'transition_colortemp'
+DEFAULT_TRANS_CT = 2700
 CONF_SUNRISE_OFFSET = 'sunrise_offset'
 CONF_SUNSET_OFFSET = 'sunset_offset'
 CONF_SUNRISE_TIME = 'sunrise_time'
@@ -74,6 +76,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_MIN_CT, default=DEFAULT_MIN_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
+        vol.Optional(CONF_TRANS_CT, default=DEFAULT_TRANS_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_SUNRISE_OFFSET): cv.time_period_str,
         vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
@@ -92,6 +96,7 @@ def setup(hass, config):
     conf = config[DOMAIN]
     min_colortemp = conf.get(CONF_MIN_CT)
     max_colortemp = conf.get(CONF_MAX_CT)
+    transition_colortemp = conf.get(CONF_TRANS_CT)
     sunrise_offset = conf.get(CONF_SUNRISE_OFFSET)
     sunset_offset = conf.get(CONF_SUNSET_OFFSET)
     sunrise_time = conf.get(CONF_SUNRISE_TIME)
@@ -106,7 +111,7 @@ def setup(hass, config):
     interval = conf.get(CONF_INTERVAL)
     transition = conf.get(ATTR_TRANSITION)
 
-    cl = CircadianLighting(hass, min_colortemp, max_colortemp,
+    cl = CircadianLighting(hass, min_colortemp, max_colortemp, transition_colortemp,
                     sunrise_offset, sunset_offset, sunrise_time, sunset_time,
                     latitude, longitude, elevation,
                     interval, transition)
@@ -118,7 +123,7 @@ def setup(hass, config):
 class CircadianLighting(object):
     """Calculate universal Circadian values."""
 
-    def __init__(self, hass, min_colortemp, max_colortemp,
+    def __init__(self, hass, min_colortemp, max_colortemp, transition_colortemp,
                     sunrise_offset, sunset_offset, sunrise_time, sunset_time,
                     latitude, longitude, elevation,
                     interval, transition):
@@ -126,6 +131,7 @@ class CircadianLighting(object):
         self.data = {}
         self.data['min_colortemp'] = min_colortemp
         self.data['max_colortemp'] = max_colortemp
+        self.data['transition_colortemp'] = transition_colortemp
         self.data['sunrise_offset'] = sunrise_offset
         self.data['sunset_offset'] = sunset_offset
         self.data['sunrise_time'] = sunrise_time
@@ -278,9 +284,9 @@ class CircadianLighting(object):
 
     def calc_colortemp(self):
         if self.data['percent'] > 0:
-            return ((self.data['max_colortemp'] - self.data['min_colortemp']) * (self.data['percent'] / 100)) + self.data['min_colortemp']
+            return ((self.data['max_colortemp'] - self.data['transition_colortemp']) * (self.data['percent'] / 100)) + self.data['transition_colortemp']
         else:
-            return self.data['min_colortemp']
+            return ((self.data['transition_colortemp'] - self.data['min_colortemp']) * (self.data['percent'] / 100)) + self.data['min_colortemp']
 
     def calc_rgb(self):
         return color_temperature_to_rgb(self.data['colortemp'])
