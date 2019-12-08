@@ -48,7 +48,7 @@ from homeassistant.util.dt import utcnow as dt_utcnow, as_local
 
 from datetime import datetime, timedelta
 
-VERSION = '1.0.9'
+VERSION = '1.0.10'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,6 @@ DEFAULT_MIN_CT = 2500
 CONF_MAX_CT = 'max_colortemp'
 DEFAULT_MAX_CT = 5500
 CONF_TRANS_CT = 'transition_colortemp'
-#DEFAULT_TRANS_CT is the value of CONF_MIN_CT for backwards compatibility
 CONF_SUNRISE_OFFSET = 'sunrise_offset'
 CONF_SUNSET_OFFSET = 'sunset_offset'
 CONF_SUNRISE_TIME = 'sunrise_time'
@@ -77,7 +76,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
-        vol.Optional(CONF_TRANS_CT, default=CONF_MIN_CT):
+        vol.Optional(CONF_TRANS_CT):
             vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
         vol.Optional(CONF_SUNRISE_OFFSET): cv.time_period_str,
         vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
@@ -131,7 +130,7 @@ class CircadianLighting(object):
         self.data = {}
         self.data['min_colortemp'] = min_colortemp
         self.data['max_colortemp'] = max_colortemp
-        self.data['transition_colortemp'] = transition_colortemp
+        self.data['transition_colortemp'] = transition_colortemp if transition_colortemp else min_colortemp
         self.data['sunrise_offset'] = sunrise_offset
         self.data['sunset_offset'] = sunset_offset
         self.data['sunrise_time'] = sunrise_time
@@ -284,9 +283,9 @@ class CircadianLighting(object):
 
     def calc_colortemp(self):
         if self.data['percent'] > 0:
-            return ((self.data['max_colortemp'] - self.data['transition_colortemp']) * (self.data['percent'] / 100)) + self.data['transition_colortemp']
+            return int((self.data['max_colortemp'] - self.data['transition_colortemp']) * (self.data['percent'] / 100)) + self.data['transition_colortemp']
         else:
-            return ((self.data['transition_colortemp'] - self.data['min_colortemp']) * (self.data['percent'] / 100)) + self.data['min_colortemp']
+            return int((self.data['transition_colortemp'] - self.data['min_colortemp']) * ((self.data['percent'] + 100) / 100)) + self.data['min_colortemp']
 
     def calc_rgb(self):
         return color_temperature_to_rgb(self.data['colortemp'])
