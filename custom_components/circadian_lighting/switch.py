@@ -92,8 +92,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         min_brightness = config.get(CONF_MIN_BRIGHT)
         max_brightness = config.get(CONF_MAX_BRIGHT)
-        min_colortemp = conf.get(CONF_MIN_CT)
-        max_colortemp = conf.get(CONF_MAX_CT)
+        min_colortemp = config.get(CONF_MIN_CT)
+        max_colortemp = config.get(CONF_MAX_CT)
         sleep_entity = config.get(CONF_SLEEP_ENTITY)
         sleep_state = config.get(CONF_SLEEP_STATE)
         sleep_colortemp = config.get(CONF_SLEEP_CT)
@@ -294,7 +294,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
             rgb = tuple(map(int, self.calc_rgb())) if self._lights_rgb is not None else None
             xy = self.calc_xy() if self._lights_xy is not None else None
             
-            "check if desired mired is within range and limit value if outside range
+            """check if desired mired is within range and limit value if outside range"""
             if mired < mired_min:
                 mired = mired_min
             if mired > mired_max:
