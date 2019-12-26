@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_DISABLE_ENTITY): cv.entity_id,
     vol.Optional(CONF_DISABLE_STATE): cv.string,
     vol.Optional(CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=1000)),
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=1000))
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
