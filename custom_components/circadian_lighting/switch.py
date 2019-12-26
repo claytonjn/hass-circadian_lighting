@@ -293,7 +293,13 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
             mired_max = int(color_temperature_kelvin_to_mired(self._max_colortemp)) if self._max_colortemp is not None else None                    
             rgb = tuple(map(int, self.calc_rgb())) if self._lights_rgb is not None else None
             xy = self.calc_xy() if self._lights_xy is not None else None
-
+            
+            "check if desired mired is within range and limit value if outside range
+            if mired < mired_min:
+                mired = mired_min
+            if mired > mired_max:
+                mired = mired_max
+                
             for light in lights:
                 """Set color of array of ct light if on."""
                 if self._lights_ct is not None and light in self._lights_ct and is_on(self.hass, light):
