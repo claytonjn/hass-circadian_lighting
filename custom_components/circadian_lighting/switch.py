@@ -212,7 +212,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         self._state = True
 
         # Make initial update
-        self.update_switch(CONF_INITIAL_TRANSITION)
+        self.update_switch(self._initial_transition)
 
         self.schedule_update_ha_state()
 
@@ -356,7 +356,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if to_state.state == 'on' and from_state.state != 'on':
-                self.adjust_lights([entity_id], CONF_INITIAL_TRANSITION)
+                self.adjust_lights([entity_id], self._initial_transition)
         except:
             pass
 
@@ -364,7 +364,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if to_state.state == self._sleep_state or from_state.state == self._sleep_state:
-                self.update_switch(CONF_INITIAL_TRANSITION)
+                self.update_switch(self._initial_transition)
         except:
             pass
     
@@ -372,6 +372,6 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if from_state.state == self._disable_state:
-                self.update_switch(CONF_INITIAL_TRANSITION)
+                self.update_switch(self._initial_transition)
         except:
             pass
