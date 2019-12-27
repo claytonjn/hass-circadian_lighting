@@ -289,8 +289,8 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
 
             brightness = int((self._attributes['brightness'] / 100) * 254) if self._attributes['brightness'] is not None else None
             mired = int(self.calc_ct()) if self._lights_ct is not None else None
-            mired_min = int(color_temperature_kelvin_to_mired(self._min_colortemp)) if self._min_colortemp is not None else None
-            mired_max = int(color_temperature_kelvin_to_mired(self._max_colortemp)) if self._max_colortemp is not None else None                    
+            mired_min = int(color_temperature_kelvin_to_mired(self._max_colortemp))
+            mired_max = int(color_temperature_kelvin_to_mired(self._min_colortemp))                   
             rgb = tuple(map(int, self.calc_rgb())) if self._lights_rgb is not None else None
             xy = self.calc_xy() if self._lights_xy is not None else None
             
