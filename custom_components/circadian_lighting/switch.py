@@ -20,11 +20,13 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, STATE_ON,
-    SERVICE_TURN_ON)
+    CONF_VALUE_TEMPLATE, SERVICE_TURN_ON)
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy, color_temperature_kelvin_to_mired,
     color_temperature_to_rgb, color_xy_to_hs)
+from homeassistant.exceptions import TemplateError
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +38,10 @@ CONF_LIGHTS_XY = 'lights_xy'
 CONF_LIGHTS_BRIGHT = 'lights_brightness'
 CONF_DISABLE_BRIGHTNESS_ADJUST = 'disable_brightness_adjust'
 CONF_MIN_BRIGHT = 'min_brightness'
+CONF_MIN_BRIGHT_TEMPLATE = 'min_brightness_template'
 DEFAULT_MIN_BRIGHT = 1
 CONF_MAX_BRIGHT = 'max_brightness'
+CONF_MAX_BRIGHT_TEMPLATE = 'max_brightness_template'
 DEFAULT_MAX_BRIGHT = 100
 CONF_SLEEP_ENTITY = 'sleep_entity'
 CONF_SLEEP_STATE = 'sleep_state'
@@ -66,7 +70,9 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_SLEEP_BRIGHT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
     vol.Optional(CONF_DISABLE_ENTITY): cv.entity_id,
-    vol.Optional(CONF_DISABLE_STATE): cv.string
+    vol.Optional(CONF_DISABLE_STATE): cv.string,
+    vol.Optional(CONF_MIN_BRIGHT_TEMPLATE): cv.template,
+    vol.Optional(CONF_MAX_BRIGHT_TEMPLATE): cv.template
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -81,6 +87,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         min_brightness = config.get(CONF_MIN_BRIGHT)
         max_brightness = config.get(CONF_MAX_BRIGHT)
+        min_brightness_template = config.get(CONF_MIN_BRIGHT_TEMPLATE)
+        max_brightness_template = config.get(CONF_MAX_BRIGHT_TEMPLATE)
         sleep_entity = config.get(CONF_SLEEP_ENTITY)
         sleep_state = config.get(CONF_SLEEP_STATE)
         sleep_colortemp = config.get(CONF_SLEEP_CT)
@@ -89,6 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         disable_state = config.get(CONF_DISABLE_STATE)
         cs = CircadianSwitch(hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
                                 disable_brightness_adjust, min_brightness, max_brightness,
+                                min_brightness_template, max_brightness_template,
                                 sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
                                 disable_entity, disable_state)
         add_devices([cs])
@@ -106,6 +115,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
 
     def __init__(self, hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
                     disable_brightness_adjust, min_brightness, max_brightness,
+                    min_brightness_template, max_brightness_template,
                     sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
                     disable_entity, disable_state):
         """Initialize the Circadian Lighting switch."""
@@ -123,6 +133,8 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         self._disable_brightness_adjust = disable_brightness_adjust
         self._min_brightness = min_brightness
         self._max_brightness = max_brightness
+        self._min_brightness_template = min_brightness_template
+        self._max_brightness_template = max_brightness_template
         self._sleep_entity = sleep_entity
         self._sleep_state = sleep_state
         self._sleep_colortemp = sleep_colortemp
@@ -150,6 +162,12 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
             track_state_change(hass, self._sleep_entity, self.sleep_state_changed)
         if self._disable_entity is not None:
             track_state_change(hass, self._disable_entity, self.disable_state_changed)
+        if self._min_brightness_template is not None:
+            self._min_brightness_template.hass = hass
+            track_state_change(hass, self._min_brightness_template.extract_entities(), self.template_state_changed)
+        if self._max_brightness_template is not None:
+            self._max_brightness_template.hass = hass
+            track_state_change(hass, self._max_brightness_template.extract_entities(), self.template_state_changed)
 
     @property
     def entity_id(self):
@@ -238,10 +256,18 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
                 _LOGGER.debug(self._name + " in Sleep mode")
                 return self._sleep_brightness
             else:
-                if self._cl.data['percent'] > 0:
-                    return self._max_brightness
+                if self._max_brightness_template is not None:
+                    max_br = max(min(float(self._max_brightness_template.async_render()), 100), 0)
                 else:
-                    return ((self._max_brightness - self._min_brightness) * ((100+self._cl.data['percent']) / 100)) + self._min_brightness
+                    max_br = self._max_brightness
+                if self._min_brightness_template is not None:
+                    min_br = min(max(float(self._min_brightness_template.async_render()), 0), max_br)
+                else:
+                    min_br = self._min_brightness
+                if self._cl.data['percent'] > 0:
+                    return max_br
+                else:
+                    return ((max_br - min_br) * ((100+self._cl.data['percent']) / 100)) + min_br
 
     def update_switch(self, transition=None):
         if self._cl.data is not None:
@@ -332,6 +358,13 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if to_state.state == 'on' and from_state.state != 'on':
                 self.adjust_lights([entity_id], DEFAULT_INITIAL_TRANSITION)
+        except:
+            pass
+    
+    def template_state_changed(self, entity_id, from_state, to_state):
+        try:
+            _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
+            self.update_switch(DEFAULT_INITIAL_TRANSITION)
         except:
             pass
 
