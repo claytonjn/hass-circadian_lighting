@@ -45,7 +45,12 @@ CONF_SLEEP_CT = 'sleep_colortemp'
 CONF_SLEEP_BRIGHT = 'sleep_brightness'
 CONF_DISABLE_ENTITY = 'disable_entity'
 CONF_DISABLE_STATE = 'disable_state'
+CONF_INITIAL_TRANSITION = 'initial_transition'
 DEFAULT_INITIAL_TRANSITION = 1
+CONF_MIN_CT = 'min_colortemp'
+DEFAULT_MIN_CT = 2500
+CONF_MAX_CT = 'max_colortemp'
+DEFAULT_MAX_CT = 5500
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'circadian_lighting',
@@ -66,7 +71,13 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_SLEEP_BRIGHT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
     vol.Optional(CONF_DISABLE_ENTITY): cv.entity_id,
-    vol.Optional(CONF_DISABLE_STATE): cv.string
+    vol.Optional(CONF_DISABLE_STATE): cv.string,
+    vol.Optional(CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=1000)),
+    vol.Optional(CONF_MIN_CT, default=DEFAULT_MIN_CT):
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000)),
+    vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT):
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=10000))
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -81,16 +92,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         min_brightness = config.get(CONF_MIN_BRIGHT)
         max_brightness = config.get(CONF_MAX_BRIGHT)
+        min_colortemp = config.get(CONF_MIN_CT)
+        max_colortemp = config.get(CONF_MAX_CT)
         sleep_entity = config.get(CONF_SLEEP_ENTITY)
         sleep_state = config.get(CONF_SLEEP_STATE)
         sleep_colortemp = config.get(CONF_SLEEP_CT)
         sleep_brightness = config.get(CONF_SLEEP_BRIGHT)
         disable_entity = config.get(CONF_DISABLE_ENTITY)
         disable_state = config.get(CONF_DISABLE_STATE)
+        initial_transition = config.get(CONF_INITIAL_TRANSITION)
         cs = CircadianSwitch(hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
                                 disable_brightness_adjust, min_brightness, max_brightness,
                                 sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
-                                disable_entity, disable_state)
+                                disable_entity, disable_state, initial_transition, min_colortemp, max_colortemp)
         add_devices([cs])
 
         def update(call=None):
@@ -107,7 +121,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
     def __init__(self, hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
                     disable_brightness_adjust, min_brightness, max_brightness,
                     sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
-                    disable_entity, disable_state):
+                    disable_entity, disable_state, initial_transition, min_colortemp, max_colortemp):
         """Initialize the Circadian Lighting switch."""
         self.hass = hass
         self._cl = cl
@@ -123,12 +137,15 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         self._disable_brightness_adjust = disable_brightness_adjust
         self._min_brightness = min_brightness
         self._max_brightness = max_brightness
+        self._min_colortemp = min_colortemp
+        self._max_colortemp = max_colortemp
         self._sleep_entity = sleep_entity
         self._sleep_state = sleep_state
         self._sleep_colortemp = sleep_colortemp
         self._sleep_brightness = sleep_brightness
         self._disable_entity = disable_entity
         self._disable_state = disable_state
+        self._initial_transition = initial_transition
         self._attributes = {}
         self._attributes['hs_color'] = self._hs_color
         self._attributes['brightness'] = None
@@ -195,7 +212,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         self._state = True
 
         # Make initial update
-        self.update_switch(DEFAULT_INITIAL_TRANSITION)
+        self.update_switch(self._initial_transition)
 
         self.schedule_update_ha_state()
 
@@ -272,9 +289,17 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
 
             brightness = int((self._attributes['brightness'] / 100) * 254) if self._attributes['brightness'] is not None else None
             mired = int(self.calc_ct()) if self._lights_ct is not None else None
+            mired_min = int(color_temperature_kelvin_to_mired(self._max_colortemp))
+            mired_max = int(color_temperature_kelvin_to_mired(self._min_colortemp))                   
             rgb = tuple(map(int, self.calc_rgb())) if self._lights_rgb is not None else None
             xy = self.calc_xy() if self._lights_xy is not None else None
-
+            
+            """check if desired mired is within range and limit value if outside range"""
+            if mired < mired_min:
+                mired = mired_min
+            if mired > mired_max:
+                mired = mired_max
+                
             for light in lights:
                 """Set color of array of ct light if on."""
                 if self._lights_ct is not None and light in self._lights_ct and is_on(self.hass, light):
@@ -331,7 +356,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if to_state.state == 'on' and from_state.state != 'on':
-                self.adjust_lights([entity_id], DEFAULT_INITIAL_TRANSITION)
+                self.adjust_lights([entity_id], self._initial_transition)
         except:
             pass
 
@@ -339,7 +364,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if to_state.state == self._sleep_state or from_state.state == self._sleep_state:
-                self.update_switch(DEFAULT_INITIAL_TRANSITION)
+                self.update_switch(self._initial_transition)
         except:
             pass
     
@@ -347,6 +372,6 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         try:
             _LOGGER.debug(entity_id + " change from " + str(from_state) + " to " + str(to_state))
             if from_state.state == self._disable_state:
-                self.update_switch(DEFAULT_INITIAL_TRANSITION)
+                self.update_switch(self._initial_transition)
         except:
             pass
