@@ -27,6 +27,8 @@ from homeassistant.util.color import (
     color_temperature_to_rgb, color_xy_to_hs)
 from homeassistant.exceptions import TemplateError
 
+import math
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,6 +146,7 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
         self._attributes = {}
         self._attributes['hs_color'] = self._hs_color
         self._attributes['brightness'] = None
+        self._adjust_color = True
 
         self._lights = []
         if lights_ct != None:
@@ -240,7 +243,8 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
             _LOGGER.debug(self._name + " in Sleep mode")
             return color_temperature_to_rgb(self._sleep_colortemp)
         else:
-            return color_temperature_to_rgb(self._cl.data['colortemp'])
+            #return color_temperature_to_rgb(self._cl.data['colortemp'])
+            return self.convert_K_to_RGB(self._cl.data['colortemp'])
 
     def calc_xy(self):
         return color_RGB_to_xy(*self.calc_rgb())
@@ -318,14 +322,15 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
                 """Set color of array of rgb light if on."""
                 if self._lights_rgb is not None and light in self._lights_rgb and is_on(self.hass, light):
                     service_data = {ATTR_ENTITY_ID: light}
-                    if rgb is not None:
+                    if self._adjust_color is True and rgb is not None:
                         service_data[ATTR_RGB_COLOR] = rgb
-                    if brightness is not None:
+                    if self._adjust_color is False and brightness is not None:
                         service_data[ATTR_BRIGHTNESS] = brightness
                     if transition is not None:
                         service_data[ATTR_TRANSITION] = transition
                     self.hass.services.call(
                         LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                    self._adjust_color = not self._adjust_color
                     _LOGGER.debug(light + " RGB Adjusted - rgb_color: " + str(rgb) + ", brightness: " + str(brightness) + ", transition: " + str(transition))
 
                 """Set color of array of xy light if on."""
@@ -383,3 +388,64 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
                 self.update_switch(DEFAULT_INITIAL_TRANSITION)
         except:
             pass
+    
+    def convert_K_to_RGB(self, colour_temperature):
+        """
+        Converts from K to RGB, algorithm courtesy of 
+        http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+        """
+        #range check
+        if colour_temperature < 1000: 
+            colour_temperature = 1000
+        elif colour_temperature > 40000:
+            colour_temperature = 40000
+    
+        tmp_internal = colour_temperature / 100.0
+    
+        # red 
+        if tmp_internal <= 66:
+            red = 190
+            #red = 255
+        else:
+            tmp_red = 329.698727446 * math.pow(tmp_internal - 60, -0.1332047592)
+            if tmp_red < 0:
+                red = 0
+            elif tmp_red > 255:
+                red = 255
+            else:
+                red = tmp_red
+    
+        # green
+        if tmp_internal <=66:
+            tmp_green = 99.4708025861 * math.log(tmp_internal) - 175
+            #tmp_green = 99.4708025861 * math.log(tmp_internal) - 161.1195681661
+            if tmp_green < 0:
+                green = 0
+            elif tmp_green > 255:
+                green = 255
+            else:
+                green = tmp_green
+        else:
+            tmp_green = 288.1221695283 * math.pow(tmp_internal - 60, -0.0755148492)
+            if tmp_green < 0:
+                green = 0
+            elif tmp_green > 255:
+                green = 255
+            else:
+                green = tmp_green
+    
+        # blue
+        if tmp_internal >=66:
+            blue = 255
+        elif tmp_internal <= 19:
+            blue = 0
+        else:
+            tmp_blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
+            if tmp_blue < 0:
+                blue = 0
+            elif tmp_blue > 255:
+                blue = 255
+            else:
+                blue = tmp_blue
+    
+        return red, green, blue
