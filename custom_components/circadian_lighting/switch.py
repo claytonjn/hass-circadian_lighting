@@ -243,7 +243,10 @@ class CircadianSwitch(SwitchDevice, RestoreEntity):
                 _LOGGER.debug(self._name + " in Sleep mode")
                 return self._sleep_brightness
             else:
-                return ((self._max_brightness - self._min_brightness) * ((100+self._cl.data['percent']) / 100)) + self._min_brightness
+                if self._cl.data['percent'] > 0:
+                    return self._max_brightness
+                else:
+                    return ((self._max_brightness - self._min_brightness) * ((100+self._cl.data['percent']) / 100)) + self._min_brightness
 
     def update_switch(self, transition=None):
         if self._cl.data is not None:
