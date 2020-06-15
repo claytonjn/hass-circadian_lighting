@@ -44,6 +44,14 @@ switch:
     lights_ct:
       - light.desk
       - light.lamp
+    max_brightness: 60
+    sleep_entity:
+      - light.table_lamp
+    sleep_state:
+        ??????
+    sleep_colortemp: 1500
+    sleep_brightness: 1
+    
 ```
 Switch configuration variables:
 * **name** (_Optional_): The name to use when displaying this switch.
