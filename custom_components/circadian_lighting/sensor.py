@@ -49,6 +49,7 @@ class CircadianSensor(Entity):
         self._attributes['colortemp'] = self._cl.data['colortemp']
         self._attributes['rgb_color'] = self._cl.data['rgb_color']
         self._attributes['xy_color'] = self._cl.data['xy_color']
+        self._attributes['direction'] = self._cl.data['direction']
 
         """Register callbacks."""
         dispatcher_connect(hass, CIRCADIAN_LIGHTING_UPDATE_TOPIC, self.update_sensor)
@@ -101,4 +102,5 @@ class CircadianSensor(Entity):
             self._attributes['colortemp'] = self._cl.data['colortemp']
             self._attributes['rgb_color'] = self._cl.data['rgb_color']
             self._attributes['xy_color'] = self._cl.data['xy_color']
+            self._attributes['direction'] = self._cl.data['direction']
             _LOGGER.debug("Circadian Lighting Sensor Updated")

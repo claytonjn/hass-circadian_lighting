@@ -40,6 +40,8 @@ CONF_LIGHTS_RGB = 'lights_rgb'
 CONF_LIGHTS_XY = 'lights_xy'
 CONF_LIGHTS_BRIGHT = 'lights_brightness'
 CONF_DISABLE_BRIGHTNESS_ADJUST = 'disable_brightness_adjust'
+CONF_DISABLE_BRIGHTNESS_ADJUST_MORNING = 'disable_brightness_adjust_morning'
+CONF_DISABLE_BRIGHTNESS_ADJUST_EVENING = 'disable_brightness_adjust_evening'
 CONF_MIN_BRIGHT = 'min_brightness'
 DEFAULT_MIN_BRIGHT = 1
 CONF_MAX_BRIGHT = 'max_brightness'
@@ -61,6 +63,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_LIGHTS_XY): cv.entity_ids,
     vol.Optional(CONF_LIGHTS_BRIGHT): cv.entity_ids,
     vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST, default=False): cv.boolean,
+    vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST_MORNING, default=False): cv.boolean,
+    vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST_EVENING, default=False): cv.boolean,
     vol.Optional(CONF_MIN_BRIGHT, default=DEFAULT_MIN_BRIGHT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
     vol.Optional(CONF_MAX_BRIGHT, default=DEFAULT_MAX_BRIGHT):
@@ -86,6 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         lights_xy = config.get(CONF_LIGHTS_XY)
         lights_brightness = config.get(CONF_LIGHTS_BRIGHT)
         disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
+        disable_brightness_adjust_morning = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST_MORNING)
+        disable_brightness_adjust_evening = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST_EVENING)
         name = config.get(CONF_NAME)
         min_brightness = config.get(CONF_MIN_BRIGHT)
         max_brightness = config.get(CONF_MAX_BRIGHT)
@@ -97,7 +103,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         disable_state = config.get(CONF_DISABLE_STATE)
         initial_transition = config.get(CONF_INITIAL_TRANSITION)
         cs = CircadianSwitch(hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
-                                disable_brightness_adjust, min_brightness, max_brightness,
+                                disable_brightness_adjust, disable_brightness_adjust_morning,
+                                disable_brightness_adjust_evening, min_brightness, max_brightness,
                                 sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
                                 disable_entity, disable_state, initial_transition)
         add_devices([cs])
@@ -114,7 +121,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Circadian Lighting switch."""
 
     def __init__(self, hass, cl, name, lights_ct, lights_rgb, lights_xy, lights_brightness,
-                    disable_brightness_adjust, min_brightness, max_brightness,
+                    disable_brightness_adjust, disable_brightness_adjust_morning,
+                    disable_brightness_adjust_evening, min_brightness, max_brightness,
                     sleep_entity, sleep_state, sleep_colortemp, sleep_brightness,
                     disable_entity, disable_state, initial_transition):
         """Initialize the Circadian Lighting switch."""
@@ -130,6 +138,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._lights_xy = lights_xy
         self._lights_brightness = lights_brightness
         self._disable_brightness_adjust = disable_brightness_adjust
+        self._disable_brightness_adjust_morning = disable_brightness_adjust_morning
+        self._disable_brightness_adjust_evening = disable_brightness_adjust_evening        
         self._min_brightness = min_brightness
         self._max_brightness = max_brightness
         self._sleep_entity = sleep_entity
@@ -242,6 +252,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
 
     def calc_brightness(self):
         if self._disable_brightness_adjust is True:
+            return None
+        elif self._disable_brightness_adjust_morning is True and self._cl.data['direction'] == 1:
+            return None
+        elif self._disable_brightness_adjust_evening is True and self._cl.data['direction'] == -1:
             return None
         else:
             if self.is_sleep():

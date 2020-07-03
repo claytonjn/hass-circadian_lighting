@@ -279,6 +279,16 @@ class CircadianLighting(object):
         _LOGGER.debug("a: " + str(a))
         _LOGGER.debug("percentage: " + str(percentage))
 
+        if 'percent' in self.data:
+            if percentage > self.data['percent']:
+                self.data['direction'] = 1
+            elif percentage < self.data['percent']:
+                self.data['direction'] = -1
+            else:
+                self.data['direction'] = 0
+        else:
+            self.data['direction'] = 0
+
         return percentage
 
     def calc_colortemp(self):
