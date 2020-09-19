@@ -245,7 +245,7 @@ class CircadianLighting:
         index_now = bisect.bisect([ts for _, ts in events], now.timestamp())
         return dict(events[index_now - 2 : index_now + 2])
 
-    def _calc_percent(self):
+    def calc_percent(self):
         now = dt_util.utcnow()
         now_ts = now.timestamp()
         today = self._relevant_events(now)
