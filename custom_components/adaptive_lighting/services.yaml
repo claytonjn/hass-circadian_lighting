@@ -1,0 +1,24 @@
+apply:
+  description: Applies the current Adaptive Lighting settings to lights.
+  fields:
+    entity_id:
+      description: entity_id of the Adaptive Lighting switch.
+      example: switch.adaptive_lighting_default
+    lights:
+      description: entity_id(s) of lights.
+      example: light.bedroom_ceiling
+    transition:
+      description: Transition of the lights.
+      example: 10
+    adapt_brightness:
+      description: "Adapt the 'brightness', default: true"
+      example: true
+    adapt_color_temp:
+      description: "Adapt the 'color_temp', default: true"
+      example: true
+    adapt_rgb_color:
+      description: "Adapt the 'rgb_color', default: true"
+      example: true
+    turn_on_lights:
+      description: "Turn on the lights that are off, default: false"
+      example: false
