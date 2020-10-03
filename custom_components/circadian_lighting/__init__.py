@@ -73,52 +73,66 @@ CONF_SUNSET_OFFSET = "sunset_offset"
 CONF_SUNRISE_TIME = "sunrise_time"
 CONF_SUNSET_TIME = "sunset_time"
 DEFAULT_TRANSITION = 60
+CONF_PROFILE, DEFAULT_PROFILE = "profile", "default"
+
+_DOMAIN_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MIN_CT, default=DEFAULT_MIN_CT): vol.All(
+            vol.Coerce(int), vol.Range(min=1000, max=10000)
+        ),
+        vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT): vol.All(
+            vol.Coerce(int), vol.Range(min=1000, max=10000)
+        ),
+        vol.Optional(CONF_SUNRISE_OFFSET): cv.time_period_str,
+        vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
+        vol.Optional(CONF_SUNRISE_TIME): cv.time,
+        vol.Optional(CONF_SUNSET_TIME): cv.time,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_ELEVATION): float,
+        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.time_period,
+        vol.Optional(ATTR_TRANSITION, default=DEFAULT_TRANSITION): VALID_TRANSITION,
+        vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE): cv.string,
+    }
+)
+
+
+def _all_unique_profiles(value):
+    """Validate that all enties have a unique profile name."""
+    hosts = [device[CONF_PROFILE] for device in value]
+    schema = vol.Schema(vol.Unique())
+    schema(hosts)
+    return value
+
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_MIN_CT, default=DEFAULT_MIN_CT): vol.All(
-                    vol.Coerce(int), vol.Range(min=1000, max=10000)
-                ),
-                vol.Optional(CONF_MAX_CT, default=DEFAULT_MAX_CT): vol.All(
-                    vol.Coerce(int), vol.Range(min=1000, max=10000)
-                ),
-                vol.Optional(CONF_SUNRISE_OFFSET): cv.time_period_str,
-                vol.Optional(CONF_SUNSET_OFFSET): cv.time_period_str,
-                vol.Optional(CONF_SUNRISE_TIME): cv.time,
-                vol.Optional(CONF_SUNSET_TIME): cv.time,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
-                vol.Optional(CONF_ELEVATION): float,
-                vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.time_period,
-                vol.Optional(
-                    ATTR_TRANSITION, default=DEFAULT_TRANSITION
-                ): VALID_TRANSITION,
-            }
-        ),
-    },
+    {DOMAIN: vol.All(cv.ensure_list, [_DOMAIN_SCHEMA], _all_unique_profiles)},
     extra=vol.ALLOW_EXTRA,
 )
 
 
 def setup(hass, config):
     """Set up the Circadian Lighting platform."""
-    conf = config[DOMAIN]
-    hass.data[DOMAIN] = CircadianLighting(
-        hass,
-        min_colortemp=conf.get(CONF_MIN_CT),
-        max_colortemp=conf.get(CONF_MAX_CT),
-        sunrise_offset=conf.get(CONF_SUNRISE_OFFSET),
-        sunset_offset=conf.get(CONF_SUNSET_OFFSET),
-        sunrise_time=conf.get(CONF_SUNRISE_TIME),
-        sunset_time=conf.get(CONF_SUNSET_TIME),
-        latitude=conf.get(CONF_LATITUDE, hass.config.latitude),
-        longitude=conf.get(CONF_LONGITUDE, hass.config.longitude),
-        elevation=conf.get(CONF_ELEVATION, hass.config.elevation),
-        interval=conf.get(CONF_INTERVAL),
-        transition=conf.get(ATTR_TRANSITION),
-    )
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    configs = config[DOMAIN]
+    for conf in configs:
+        profile = conf[CONF_PROFILE]
+        hass.data[DOMAIN][profile] = CircadianLighting(
+            hass,
+            min_colortemp=conf[CONF_MIN_CT],
+            max_colortemp=conf[CONF_MAX_CT],
+            sunrise_offset=conf.get(CONF_SUNRISE_OFFSET),
+            sunset_offset=conf.get(CONF_SUNSET_OFFSET),
+            sunrise_time=conf.get(CONF_SUNRISE_TIME),
+            sunset_time=conf.get(CONF_SUNSET_TIME),
+            latitude=conf.get(CONF_LATITUDE, hass.config.latitude),
+            longitude=conf.get(CONF_LONGITUDE, hass.config.longitude),
+            elevation=conf.get(CONF_ELEVATION, hass.config.elevation),
+            interval=conf[CONF_INTERVAL],
+            transition=conf[ATTR_TRANSITION],
+            profile=profile,
+        )
     load_platform(hass, "sensor", DOMAIN, {}, config)
 
     return True
@@ -141,6 +155,7 @@ class CircadianLighting:
         elevation,
         interval,
         transition,
+        profile,
     ):
         self.hass = hass
         self._min_colortemp = min_colortemp
@@ -153,8 +168,10 @@ class CircadianLighting:
         self._longitude = longitude
         self._elevation = elevation
         self._transition = transition
+        self._profile = profile
+        _LOGGER.debug("profile: %s", self._profile)
 
-        self._percent = self.calc_percent()
+        self._percent = self._calc_percent()
         self._colortemp = self.calc_colortemp()
         self._rgb_color = self.calc_rgb()
         self._xy_color = self.calc_xy()
@@ -301,7 +318,7 @@ class CircadianLighting:
 
     async def update(self, _=None):
         """Update Circadian Values."""
-        self._percent = self.calc_percent()
+        self._percent = self._calc_percent()
         self._colortemp = self.calc_colortemp()
         self._rgb_color = self.calc_rgb()
         self._xy_color = self.calc_xy()

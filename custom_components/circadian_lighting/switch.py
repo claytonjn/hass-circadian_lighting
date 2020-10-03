@@ -38,7 +38,7 @@ from homeassistant.util.color import (
     color_xy_to_hs,
 )
 
-from . import CIRCADIAN_LIGHTING_UPDATE_TOPIC, DOMAIN
+from . import CIRCADIAN_LIGHTING_UPDATE_TOPIC, DOMAIN, CONF_PROFILE, DEFAULT_PROFILE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,39 +89,36 @@ PLATFORM_SCHEMA = vol.Schema(
             CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION
         ): VALID_TRANSITION,
         vol.Optional(CONF_ONLY_ONCE, default=False): cv.boolean,
+        vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Circadian Lighting switches."""
-    circadian_lighting = hass.data.get(DOMAIN)
-    if circadian_lighting is not None:
-        switch = CircadianSwitch(
-            hass,
-            circadian_lighting,
-            name=config.get(CONF_NAME),
-            lights_ct=config.get(CONF_LIGHTS_CT, []),
-            lights_rgb=config.get(CONF_LIGHTS_RGB, []),
-            lights_xy=config.get(CONF_LIGHTS_XY, []),
-            lights_brightness=config.get(CONF_LIGHTS_BRIGHT, []),
-            disable_brightness_adjust=config.get(CONF_DISABLE_BRIGHTNESS_ADJUST),
-            min_brightness=config.get(CONF_MIN_BRIGHT),
-            max_brightness=config.get(CONF_MAX_BRIGHT),
-            sleep_entity=config.get(CONF_SLEEP_ENTITY),
-            sleep_state=config.get(CONF_SLEEP_STATE),
-            sleep_colortemp=config.get(CONF_SLEEP_CT),
-            sleep_brightness=config.get(CONF_SLEEP_BRIGHT),
-            disable_entity=config.get(CONF_DISABLE_ENTITY),
-            disable_state=config.get(CONF_DISABLE_STATE),
-            initial_transition=config.get(CONF_INITIAL_TRANSITION),
-            only_once=config.get(CONF_ONLY_ONCE),
-        )
-        add_devices([switch])
-
-        return True
-    else:
-        return False
+    profile = config[CONF_PROFILE]
+    circadian_lighting = hass.data[DOMAIN][profile]
+    switch = CircadianSwitch(
+        hass,
+        circadian_lighting,
+        name=config[CONF_NAME],
+        lights_ct=config.get(CONF_LIGHTS_CT, []),
+        lights_rgb=config.get(CONF_LIGHTS_RGB, []),
+        lights_xy=config.get(CONF_LIGHTS_XY, []),
+        lights_brightness=config.get(CONF_LIGHTS_BRIGHT, []),
+        disable_brightness_adjust=config[CONF_DISABLE_BRIGHTNESS_ADJUST],
+        min_brightness=config[CONF_MIN_BRIGHT],
+        max_brightness=config[CONF_MAX_BRIGHT],
+        sleep_entity=config.get(CONF_SLEEP_ENTITY),
+        sleep_state=config.get(CONF_SLEEP_STATE),
+        sleep_colortemp=config[CONF_SLEEP_CT],
+        sleep_brightness=config[CONF_SLEEP_BRIGHT],
+        disable_entity=config.get(CONF_DISABLE_ENTITY),
+        disable_state=config.get(CONF_DISABLE_STATE),
+        initial_transition=config[CONF_INITIAL_TRANSITION],
+        only_once=config[CONF_ONLY_ONCE],
+    )
+    add_devices([switch])
 
 
 def _difference_between_states(from_state, to_state):
