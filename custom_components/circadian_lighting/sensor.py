@@ -41,13 +41,13 @@ class CircadianSensor(Entity):
         self._cl = cl
         self._name = 'Circadian Values'
         self._entity_id = 'sensor.circadian_values'
-        self._state = self._cl.data['percent']
+        self._state = round(self._cl.data['percent'],1)
         self._unit_of_measurement = '%'
         self._icon = ICON
         self._hs_color = self._cl.data['hs_color']
         self._attributes = {}
-        self._attributes['colortemp'] = self._cl.data['colortemp']
-        self._attributes['rgb_color'] = self._cl.data['rgb_color']
+        self._attributes['colortemp'] = round(self._cl.data['colortemp'],0)
+        self._attributes['rgb_color'] = [round(x,0) for x in self._cl.data['rgb_color']]
         self._attributes['xy_color'] = self._cl.data['xy_color']
 
         """Register callbacks."""
@@ -96,9 +96,9 @@ class CircadianSensor(Entity):
 
     def update_sensor(self):
         if self._cl.data is not None:
-            self._state = self._cl.data['percent']
+            self._state = round(self._cl.data['percent'],1)
             self._hs_color = self._cl.data['hs_color']
-            self._attributes['colortemp'] = self._cl.data['colortemp']
-            self._attributes['rgb_color'] = self._cl.data['rgb_color']
+            self._attributes['colortemp'] = round(self._cl.data['colortemp'],0)
+            self._attributes['rgb_color'] = [round(x,0) for x in self._cl.data['rgb_color']]
             self._attributes['xy_color'] = self._cl.data['xy_color']
             _LOGGER.debug("Circadian Lighting Sensor Updated")
