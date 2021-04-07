@@ -10,12 +10,38 @@ from custom_components.circadian_lighting import DOMAIN, CIRCADIAN_LIGHTING_UPDA
 
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.util.color import (
+    color_RGB_to_xy, color_temperature_kelvin_to_mired,
+    color_temperature_to_rgb, color_xy_to_hs)
 import datetime
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:theme-light-dark'
+####################################
+hue_gateway = "INPUTHUEIPHERE"
+key = "INPUTHUEAPIKEYHERE"
+####################################
+def update_scene_lights(scene, brightness, x_val, y_val, mired):
+	url = "http://" + hue_gateway + "/api/" + key + "/scenes/" + scene + "/"
+	r = requests.get(url).json()
+	r = r['lights']
+	_LOGGER.debug("Updating scene id:" + str(scene))
+	for val in r:
+		url = "http://" + hue_gateway + "/api/" + key + "/lights/" + str(val)
+		t = requests.get(url).json()
+		type = t['type']
+		url = "http://" + hue_gateway + "/api/" + key + "/scenes/" + scene + "/lightstates/" + str(val)
+		if type == 'Color temperature light':
+			body = json.dumps({'on': True, 'bri': brightness, 'ct': mired})
+		if type == 'Extended color light':
+			body = json.dumps({'on': True, 'bri': brightness, 'ct': mired})
+		if type == 'Dimmable light':
+			body = json.dumps({'on': True, 'bri': brightness})
+		r = requests.put(url, data=body)
+		_LOGGER.debug("light id: " + str(val) + " body " + str(body) + " status code: " + str(r.status_code))
+		if int(r.status_code) != int(200):
+			_LOGGER.error("light id: " + str(val) + " body" + str(body) + " status code: " + str(r.status_code))
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Circadian Lighting sensor."""
@@ -102,3 +128,16 @@ class CircadianSensor(Entity):
             self._attributes['rgb_color'] = self._cl.data['rgb_color']
             self._attributes['xy_color'] = self._cl.data['xy_color']
             _LOGGER.debug("Circadian Lighting Sensor Updated")
+
+
+			url = "http://" + hue_gateway + "/api/" + key + "/scenes/"
+			r = requests.get(url).json()
+
+			scenes = []
+			for val in r:
+				name = r[val]['name']
+				if re.match(r"Circadian", name):
+					scenes.append(val)
+
+			for val in scenes:
+				update_scene_lights(val, brightness, xy[0], xy[1], ct)
