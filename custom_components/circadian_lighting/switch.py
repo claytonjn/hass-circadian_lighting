@@ -7,6 +7,7 @@ import logging
 from itertools import repeat
 
 import voluptuous as vol
+import colour
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
@@ -299,7 +300,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         return color_temperature_to_rgb(self._color_temperature())
 
     def _calc_xy(self):
-        return color_RGB_to_xy(*self._calc_rgb())
+        return list(colour.temperature.CCT_to_xy_CIE_D(self._color_temperature()))
 
     def _calc_hs(self):
         return color_xy_to_hs(*self._calc_xy())
@@ -352,7 +353,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
             if not is_on(self.hass, light):
                 continue
 
-            service_data = {ATTR_ENTITY_ID: light, ATTR_TRANSITION: transition}
+            service_data = {ATTR_ENTITY_ID: light}
+            service_data[ATTR_TRANSITION] = transition
             if self._brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = int((self._brightness / 100) * 254)
 
