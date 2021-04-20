@@ -9,6 +9,7 @@ import logging
 from custom_components.circadian_lighting import DOMAIN, CIRCADIAN_LIGHTING_UPDATE_TOPIC, DATA_CIRCADIAN_LIGHTING
 
 import voluptuous as vol
+import colour
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_connect
@@ -235,7 +236,11 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
             return color_temperature_to_rgb(self._cl.data['colortemp'])
 
     def calc_xy(self):
-        return color_RGB_to_xy(*self.calc_rgb())
+        if self.is_sleep():
+            _LOGGER.debug(self._name + " in Sleep mode")
+            return list(colour.temperature.CCT_to_xy_CIE_D(self._sleep_colortemp))
+        else:
+            return list(colour.temperature.CCT_to_xy_CIE_D(self._cl.data['colortemp']))
 
     def calc_hs(self):
         return color_xy_to_hs(*self.calc_xy())
