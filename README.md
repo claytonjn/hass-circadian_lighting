@@ -51,7 +51,7 @@ In addition, Circadian Lighting can set your lights to a nice cool white at 1% i
 ## Basic Installation/Configuration Instructions:
 
 #### Installation:
-Install `custom_component` files automatically using [HACS](https://github.com/claytonjn/hass-circadian_lighting/wiki/Installation-Instructions#hacs) or [Custom Updater](https://github.com/claytonjn/hass-circadian_lighting/wiki/Installation-Instructions#custom-updater), or install [Manually](https://github.com/claytonjn/hass-circadian_lighting/wiki/Installation-Instructions#manual-installation).
+Install [Manually](https://github.com/claytonjn/hass-circadian_lighting/wiki/Installation-Instructions#manual-installation).
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
