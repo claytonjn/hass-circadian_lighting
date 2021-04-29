@@ -1,4 +1,4 @@
-"""
+d"""
 Circadian Lighting Sensor for Home-Assistant.
 """
 
@@ -133,27 +133,27 @@ class CircadianSensor(Entity):
             self._attributes['rgb_color'] = self._cl.data['rgb_color']
             self._attributes['xy_color'] = self._cl.data['xy_color']
             _LOGGER.debug("Circadian Lighting Sensor Updated")
-	def update_sensor(self):
-		if self._cl.data is not None:
-			self._state = self._cl.data['percent']
-			self._hs_color = self._cl.data['hs_color']
-			self._attributes = self._cl.data
-			min_brightness = 30
-			max_brightness = 100
-			brightness = int(((max_brightness - min_brightness) * ((100+self._cl.data['percent']) / 100)) + (min_brightness / 100) * 254)
-			ct = color_temperature_kelvin_to_mired(self._cl.data['colortemp'])
-			rgb = color_temperature_to_rgb(self._cl.data['colortemp'])
-			_LOGGER.debug("RGB values: " + str(rgb))
-			xy = color_RGB_to_xy(rgb[0],rgb[1],rgb[2])
+    def update_sensor(self):
+	if self._cl.data is not None:
+	    self._state = self._cl.data['percent']
+ 	    self._hs_color = self._cl.data['hs_color']
+            self._attributes = self._cl.data
+	    min_brightness = 30
+	    max_brightness = 100
+	    brightness = int(((max_brightness - min_brightness) * ((100+self._cl.data['percent']) / 100)) + (min_brightness / 100) * 254)
+            ct = color_temperature_kelvin_to_mired(self._cl.data['colortemp'])
+            rgb = color_temperature_to_rgb(self._cl.data['colortemp'])
+	    _LOGGER.debug("RGB values: " + str(rgb))
+            xy = color_RGB_to_xy(rgb[0],rgb[1],rgb[2])
 
-			url = "http://" + hue_gateway + "/api/" + key + "/scenes/"
-			r = requests.get(url).json()
+            url = "http://" + hue_gateway + "/api/" + key + "/scenes/"
+	    r = requests.get(url).json()
 
-			scenes = []
-			for val in r:
-				name = r[val]['name']
-				if re.match(r"Circadian", name):
-					scenes.append(val)
+	    scenes = []
+            for val in r:
+		name = r[val]['name']
+		if re.match(r"Circadian", name):
+		    scenes.append(val)
 
-			for val in scenes:
-				update_scene_lights(val, brightness, xy[0], xy[1], ct)
+	    for val in scenes:
+		update_scene_lights(val, brightness, xy[0], xy[1], ct)
