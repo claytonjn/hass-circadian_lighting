@@ -48,7 +48,7 @@ from homeassistant.util.dt import now as dt_now, get_time_zone
 
 from datetime import datetime, timedelta
 
-VERSION = '1.0.13'
+VERSION = '2.1'
 
 _LOGGER = logging.getLogger(__name__)
 
