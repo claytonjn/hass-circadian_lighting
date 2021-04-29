@@ -1,4 +1,4 @@
-d"""
+"""
 Circadian Lighting Sensor for Home-Assistant.
 """
 
