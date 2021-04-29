@@ -4,6 +4,7 @@ Circadian Lighting Sensor for Home-Assistant.
 
 DEPENDENCIES = ['circadian_lighting']
 
+
 import logging
 import re
 import requests
