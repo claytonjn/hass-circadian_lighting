@@ -1,5 +1,4 @@
 # Circadian Lighting [[Home Assistant](https://www.home-assistant.io/) Component]
-## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
 Forked from https://github.com/claytonjn/hass-circadian_lighting .
 
@@ -25,6 +24,7 @@ In each room where you would like to turn on the Circadian Light scene with a Hu
 NOTE: Be sure the switches (created in config.yaml) are ON before trying to use the scene function described above. You can trun the swtiches on from the HA GUI or via HomeKit if you sync your HA instance to HomeKit. 
 
 --------------------------------------------------------------------------------------------------------------
+## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
 ![Circadian Light Rhythm|690x287](https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/5/f/5fe7a780e9f8905fea4d1cbb66cdbe35858a6e36.jpg)
 
