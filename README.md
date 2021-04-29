@@ -2,13 +2,19 @@
 ## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
 Forked from https://github.com/claytonjn/hass-circadian_lighting .
+
 Specifically modified to work better with Hue, where Hue scenes can be updated in real time with Circadian Lighting Values. This fork requires you to obtain your Hue API key and your Hue bridge IP address. Please read below for instructions.
 
 **Obtain Hue API Key**
+
 https://developers.meethue.com/develop/get-started-2/
+
 Follow the directions on the meethue dev site to connect to your bridge and make the appropraite API calls. Your API key will be the "username" that is created once you link your bridge (i.e., by pressing the pair button) to your API debugger.
+
 On the custom_components/circadian_lighting/sensor.py file, replace lines 28 and 29:
+
 hue_gateway = "INPUTHUEIPHERE" <--------put your HUE Bridge IP here...
+
 key = "INPUTHUEAPIKEYHERE" <---------put the API key here
 
 --------------------------------------------------------------------------------------------------------------
