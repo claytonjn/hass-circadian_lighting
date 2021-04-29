@@ -17,12 +17,11 @@ hue_gateway = "INPUTHUEIPHERE" <--------put your HUE Bridge IP here...
 key = "INPUTHUEAPIKEYHERE" <---------put the API key here
 
 
-**Setup Scenes
-**
+**Setup Scenes**
 
 In each room where you would like to turn on the Circadian Light scene with a Hue switch/dimmer, you will need a scene in that room called "Circadian" wihtout quotes. The "C" must be capitalized. I use the iConnectHue app on my iPhone to make these scenes. Different apps may not appropriately make the scenes, and I recommend iConnectHue anyway. In a room, like Kitchen, add a scene with the bulbs you would like to be turned on with your switch. The color/brightness values do not matter as this plugin will overwrite them. Create the Circadian scene and assign the scene to your switch. Setup this plugin the rest of the way like Clayton recommends below. You can see examples from my HA config here: https://github.com/robertomano24/home-assistant
 
-NOTE: Be sure the switches (created in config.yaml) are ON before trying to use the scene function described above. You can trun the swtiches on from the HA GUI or via HomeKit if you sync your HA instance to HomeKit. 
+NOTE: Be sure the switches (created in config.yaml) are ON before trying to use the scene function described above. You can trun the swtiches on from the HA GUI or via HomeKit if you sync your HA instance to HomeKit.
 
 --------------------------------------------------------------------------------------------------------------
 ## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
@@ -35,7 +34,7 @@ In addition, Circadian Lighting can set your lights to a nice cool white at 1% i
 
 
 <details><summary>Expand for articles explaining the benefits of maintaining a natural Circadian rhythm</summary>
-  
+
 * [Circadian Rhythms - National Institute of General Medical Sciences](https://www.nigms.nih.gov/Education/Pages/Factsheet_CircadianRhythms.aspx)
 * [Circadian Rhythms Linked to Aging and Well-Being | Psychology Today](https://www.psychologytoday.com/us/blog/the-athletes-way/201306/circadian-rhythms-linked-aging-and-well-being)
 * [Maintaining a daily rhythm is important for mental health, study suggests - CNN](https://www.cnn.com/2018/05/15/health/circadian-rhythm-mood-disorder-study/index.html)
