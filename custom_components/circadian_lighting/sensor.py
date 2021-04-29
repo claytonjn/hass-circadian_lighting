@@ -125,14 +125,7 @@ class CircadianSensor(Entity):
         """
         self._cl.update()
 
-    def update_sensor(self):
-        if self._cl.data is not None:
-            self._state = self._cl.data['percent']
-            self._hs_color = self._cl.data['hs_color']
-            self._attributes['colortemp'] = self._cl.data['colortemp']
-            self._attributes['rgb_color'] = self._cl.data['rgb_color']
-            self._attributes['xy_color'] = self._cl.data['xy_color']
-            _LOGGER.debug("Circadian Lighting Sensor Updated")
+
     def update_sensor(self):
 	if self._cl.data is not None:
 	    self._state = self._cl.data['percent']
