@@ -5,6 +5,11 @@ Circadian Lighting Sensor for Home-Assistant.
 DEPENDENCIES = ['circadian_lighting']
 
 import logging
+import re
+import requests
+import json
+import math
+from datetime import timedelta
 
 from custom_components.circadian_lighting import DOMAIN, CIRCADIAN_LIGHTING_UPDATE_TOPIC, DATA_CIRCADIAN_LIGHTING
 
@@ -128,8 +133,6 @@ class CircadianSensor(Entity):
             self._attributes['rgb_color'] = self._cl.data['rgb_color']
             self._attributes['xy_color'] = self._cl.data['xy_color']
             _LOGGER.debug("Circadian Lighting Sensor Updated")
-
-
 	def update_sensor(self):
 		if self._cl.data is not None:
 			self._state = self._cl.data['percent']
