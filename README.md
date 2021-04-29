@@ -1,7 +1,7 @@
 # Circadian Lighting [[Home Assistant](https://www.home-assistant.io/) Component]
 ## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
-Forked from https://github.com/claytonjn/hass-circadian_lighting
+Forked from https://github.com/claytonjn/hass-circadian_lighting .
 Specifically modified to work better with Hue, where Hue scenes can be updated in real time with Circadian Lighting Values. This fork requires you to obtain your Hue API key and your Hue bridge IP address. Please read below for instructions.
 
 **Obtain Hue API Key**
