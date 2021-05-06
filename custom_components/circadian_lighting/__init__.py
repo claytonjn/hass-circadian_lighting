@@ -47,6 +47,17 @@ from homeassistant.util.color import (
 from homeassistant.util.dt import now as dt_now, get_time_zone
 
 from datetime import datetime, timedelta
+import pytz
+
+from astral import Observer
+from astral.sun import (
+        sunrise as AstrSunrise,
+        sunset as AstrSunset,
+        noon as AstrNoon,
+        midnight as AstrMidnight, 
+) 
+
+
 
 VERSION = '1.0.13'
 
@@ -170,28 +181,26 @@ class CircadianLighting(object):
             solar_noon = sunrise + (sunset - sunrise)/2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset)/2
         else:
-            import astral
-            location = astral.Location()
-            location.name = 'name'
-            location.region = 'region'
+            location = Observer()
             location.latitude = self.data['latitude']
             location.longitude = self.data['longitude']
             location.elevation = self.data['elevation']
+            tz = pytz.timezone(str(self.data['timezone']))
             _LOGGER.debug("Astral location: " + str(location))
             if self.data['sunrise_time'] is not None:
                 if date is None:
                     date = dt_now(self.data['timezone'])
                 sunrise = date.replace(hour=int(self.data['sunrise_time'].strftime("%H")), minute=int(self.data['sunrise_time'].strftime("%M")), second=int(self.data['sunrise_time'].strftime("%S")), microsecond=int(self.data['sunrise_time'].strftime("%f")))
             else:
-                sunrise = location.sunrise(date)
+                sunrise = AstrSunrise(location, date, tz)
             if self.data['sunset_time'] is not None:
                 if date is None:
                     date = dt_now(self.data['timezone'])
                 sunset = date.replace(hour=int(self.data['sunset_time'].strftime("%H")), minute=int(self.data['sunset_time'].strftime("%M")), second=int(self.data['sunset_time'].strftime("%S")), microsecond=int(self.data['sunset_time'].strftime("%f")))
             else:
-                sunset = location.sunset(date)
-            solar_noon = location.solar_noon(date)
-            solar_midnight = location.solar_midnight(date)
+                sunset = AstrSunset(location, date, tz)
+            solar_noon = AstrNoon(location, date, tz)
+            solar_midnight = AstrMidnight(location, date, tz)
         if self.data['sunrise_offset'] is not None:
             sunrise = sunrise + self.data['sunrise_offset']
         if self.data['sunset_offset'] is not None:
