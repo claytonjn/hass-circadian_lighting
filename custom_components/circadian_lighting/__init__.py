@@ -171,7 +171,8 @@ class CircadianLighting(object):
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset)/2
         else:
             import astral
-            location = astral.Location()
+            import astral.location as astralLocation
+            location = astralLocation.Location()
             location.name = 'name'
             location.region = 'region'
             location.latitude = self.data['latitude']
@@ -190,8 +191,8 @@ class CircadianLighting(object):
                 sunset = date.replace(hour=int(self.data['sunset_time'].strftime("%H")), minute=int(self.data['sunset_time'].strftime("%M")), second=int(self.data['sunset_time'].strftime("%S")), microsecond=int(self.data['sunset_time'].strftime("%f")))
             else:
                 sunset = location.sunset(date)
-            solar_noon = location.solar_noon(date)
-            solar_midnight = location.solar_midnight(date)
+            solar_noon = location.noon(date)
+            solar_midnight = location.midnight(date)
         if self.data['sunrise_offset'] is not None:
             sunrise = sunrise + self.data['sunrise_offset']
         if self.data['sunset_offset'] is not None:
