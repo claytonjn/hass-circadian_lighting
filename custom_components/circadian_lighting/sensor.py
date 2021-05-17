@@ -128,10 +128,13 @@ class CircadianSensor(Entity):
 
 
     def update_sensor(self):
-	if self._cl.data is not None:
-	    self._state = self._cl.data['percent']
- 	    self._hs_color = self._cl.data['hs_color']
-            self._attributes = self._cl.data
+        if self._cl.data is not None:
+            self._state = self._cl.data['percent']
+            self._hs_color = self._cl.data['hs_color']
+#            self._attributes = self._cl.data
+            self._attributes['colortemp'] = self._cl.data['colortemp']
+            self._attributes['rgb_color'] = self._cl.data['rgb_color']
+            self._attributes['xy_color'] = self._cl.data['xy_color']
 	    min_brightness = 30
 	    max_brightness = 100
 	    brightness = int(((max_brightness - min_brightness) * ((100+self._cl.data['percent']) / 100)) + (min_brightness / 100) * 254)
