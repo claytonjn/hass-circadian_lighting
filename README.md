@@ -2,27 +2,7 @@
 
 Forked from https://github.com/claytonjn/hass-circadian_lighting .
 
-Specifically modified to work better with Hue, where Hue scenes can be updated in real time with Circadian Lighting Values. This fork requires you to obtain your Hue API key and your Hue bridge IP address. Please read below for instructions.
-
-**Obtain Hue API Key**
-
-https://developers.meethue.com/develop/get-started-2/
-
-Follow the directions on the meethue dev site to connect to your bridge and make the appropraite API calls. Your API key will be the "username" that is created once you link your bridge (i.e., by pressing the pair button) to your API debugger.
-
-On the custom_components/circadian_lighting/sensor.py file, replace lines 28 and 29:
-
-hue_gateway = "INPUTHUEIPHERE" <--------put your HUE Bridge IP here...
-
-key = "INPUTHUEAPIKEYHERE" <---------put the API key here
-
-
-**Setup Scenes**
-
-In each room where you would like to turn on the Circadian Light scene with a Hue switch/dimmer, you will need a scene in that room called "Circadian" wihtout quotes. The "C" must be capitalized. I use the iConnectHue app on my iPhone to make these scenes. Different apps may not appropriately make the scenes, and I recommend iConnectHue anyway. In a room, like Kitchen, add a scene with the bulbs you would like to be turned on with your switch. The color/brightness values do not matter as this plugin will overwrite them. Create the Circadian scene and assign the scene to your switch. Setup this plugin the rest of the way like Clayton recommends below. You can see examples from my HA config here: https://github.com/robertomano24/home-assistant
-
-NOTE: Be sure the switches (created in config.yaml) are ON before trying to use the scene function described above. You can trun the swtiches on from the HA GUI or via HomeKit if you sync your HA instance to HomeKit.
-
+This sensor has been returned to the original function of circadian lighting. Since CL has not been updated for a little over a year, this fork will continue to maintain compatibility with HA as HA continues to be updated. You can use this fork for CL functionality with HA. If you prefer superior Hue integration with CL, please check out this repo: https://github.com/robertomano24/circadian_lighting-hue
 --------------------------------------------------------------------------------------------------------------
 ## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
