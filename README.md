@@ -4,6 +4,8 @@ Forked from https://github.com/claytonjn/hass-circadian_lighting .
 
 This sensor has been returned to the original function of circadian lighting. Since CL has not been updated for a little over a year, this fork will continue to maintain compatibility with HA as HA continues to be updated. You can use this fork for CL functionality with HA. If you prefer superior Hue integration with CL, please check out this repo: https://github.com/robertomano24/circadian_lighting-hue
 --------------------------------------------------------------------------------------------------------------
+Blog: https://whitematter.tech/2021/live-better-with-circadian-lighting/
+
 ## Stay healthier and sleep better by syncing your lights with natural daylight to maintain your circadian rhythm!
 
 ![Circadian Light Rhythm|690x287](https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/5/f/5fe7a780e9f8905fea4d1cbb66cdbe35858a6e36.jpg)
