@@ -3,7 +3,9 @@
   "name": "Circadian Lighting",
   "version": "2.0.4-beta",
   "documentation": "https://github.com/claytonjn/hass-circadian_lighting",
-  "dependencies": [],
+  "issue_tracker": "https://github.com/claytonjn/hass-circadian_lighting/issues",
+  "dependencies": ["sensor","switch"],
   "codeowners": ["@claytonjn"],
-  "requirements": ["astral==1.10.1"]
+  "requirements": [],
+  "iot_class": "calculated"
 }
