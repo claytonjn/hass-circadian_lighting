@@ -200,7 +200,10 @@ class CircadianLighting:
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
-            location = astral.Location()
+            try:
+              location = astral.location.Location()
+            except AttributeError:
+              location = astral.Location()
             location.name = "name"
             location.region = "region"
             location.latitude = self._latitude
@@ -217,8 +220,14 @@ class CircadianLighting:
             else:
                 sunset = location.sunset(date)
 
-            solar_noon = location.solar_noon(date)
-            solar_midnight = location.solar_midnight(date)
+            try:
+              solar_noon = location.noon(date)
+            except AttributeError:
+              solar_noon = location.solar_noon(date)
+            try:
+              solar_midnight = location.midnight(date)
+            except AttributeError:
+              solar_midnight = location.solar_midnight(date)
 
         if self._sunrise_offset is not None:
             sunrise = sunrise + self._sunrise_offset
