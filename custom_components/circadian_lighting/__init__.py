@@ -163,7 +163,6 @@ class CircadianLighting(object):
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset)/2
         else:
             import astral
-            location = astral.Location()
             try:
               location = astral.location.Location()
             except AttributeError:
