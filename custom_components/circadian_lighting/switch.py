@@ -4,10 +4,15 @@ Circadian Lighting Switch for Home-Assistant.
 
 import asyncio
 import logging
+import sys
 from itertools import repeat
 
 import voluptuous as vol
-import colour
+try:
+    import colour
+    USING_COLOUR = True
+except:
+    USING_COLOUR = False
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
@@ -300,7 +305,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         return color_temperature_to_rgb(self._color_temperature())
 
     def _calc_xy(self):
-        return list(colour.temperature.CCT_to_xy_CIE_D(self._color_temperature()))
+        if USING_COLOUR:
+            return list(colour.temperature.CCT_to_xy_CIE_D(self._color_temperature()))
+        else:
+            return color_RGB_to_xy(*self._calc_rgb())
 
     def _calc_hs(self):
         return color_xy_to_hs(*self._calc_xy())
