@@ -384,7 +384,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 color_temp = self._calc_ct()
                 lightstates = await scene.lightstates
                 for light_id in scene.lights:
-                    await scene.set_lightstate(id=light_id,on=lightstates[light_id]["on"],bri=self._brightness,ct=color_temp)
+                    await scene.set_lightstate(id=light_id,on=lightstates[light_id]["on"],bri=round(self._brightness),ct=color_temp)
 
     def _is_disabled(self):
         return (
