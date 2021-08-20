@@ -4,7 +4,9 @@ Circadian Lighting Switch for Home-Assistant.
 
 import asyncio
 import aiohttp
+import aiohue
 from aiohue.discovery import discover_nupnp
+import json
 import logging
 from itertools import repeat
 
@@ -338,7 +340,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._hs_color = self._calc_hs()
         self._brightness = self._calc_brightness()
         await self._adjust_lights(lights or self._lights, transition)
-        if self._hue_username is not None:
+        if self._hue_keyword is not None:
             async with aiohttp.ClientSession() as session:
                 await self.update_hue_run(session)
 
@@ -348,10 +350,32 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         )
     
     async def update_hue_run(self,websession):
-        bridges = await discover_nupnp(websession)
+        try:
+            entriesJson = open('/config/.storage/core.config_entries',)
+            response = json.load(entriesJson)
 
-        bridge = bridges[0]
-        bridge.username = self._hue_username
+            for entry in response["data"]["entries"]:
+                if entry["title"] == "Philips hue":
+                    break
+            bridge = aiohue.Bridge(
+                entry["data"]["host"],
+                username=entry["data"]["username"],
+                websession=websession,
+            )
+        except Exception as e:
+            raise e
+        if bridge is None: 
+            bridges = await discover_nupnp(websession)
+            if self._hue_bridge is not None:
+                bridge = aiohue.Bridge(
+                    self._hue_bridge,
+                    username=self._hue_username,
+                    websession=websession,
+                )
+            else:
+                bridges = await discover_nupnp(websession)
+                bridge = bridges[0]
+                bridge.username = self._hue_username
 
         await bridge.initialize()
         for id in bridge.scenes:
