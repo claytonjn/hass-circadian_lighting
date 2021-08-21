@@ -348,34 +348,35 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         return await self._update_switch(
             lights, transition=self._initial_transition, force=True
         )
-    
-    async def update_hue_run(self,websession):
-        try:
-            entriesJson = open('/config/.storage/core.config_entries',)
-            response = json.load(entriesJson)
 
-            for entry in response["data"]["entries"]:
-                if entry["title"] == "Philips hue":
-                    break
+    async def update_hue_run(self,websession):
+        if self._hue_bridge is not None:
             bridge = aiohue.Bridge(
-                entry["data"]["host"],
-                username=entry["data"]["username"],
+                self._hue_bridge,
+                username=self._hue_username,
                 websession=websession,
             )
-        except Exception as e:
-            raise e
-        if bridge is None: 
-            bridges = await discover_nupnp(websession)
-            if self._hue_bridge is not None:
+        else:
+            try:
+                entriesJson = open('/config/.storage/core.config_entries',)
+                response = json.load(entriesJson)
+
+                for entry in response["data"]["entries"]:
+                    if entry["title"] == "Philips hue":
+                        break
                 bridge = aiohue.Bridge(
-                    self._hue_bridge,
-                    username=self._hue_username,
+                    entry["data"]["host"],
+                    username=entry["data"]["username"],
                     websession=websession,
                 )
-            else:
-                bridges = await discover_nupnp(websession)
-                bridge = bridges[0]
-                bridge.username = self._hue_username
+            except Exception as e:
+                raise e
+        if bridge is None:
+            if self._hue_username is None:
+                return False
+            bridges = await discover_nupnp(websession)
+            bridge = bridges[0]
+            bridge.username = self._hue_username
 
         await bridge.initialize()
         for id in bridge.scenes:
