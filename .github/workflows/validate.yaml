@@ -44,6 +44,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel
           python -m pip install --upgrade flake8 wemake-python-styleguide
+          python -m pip install --upgrade flake8-quotes
       - name: Lint with flake8
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
