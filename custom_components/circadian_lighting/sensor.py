@@ -70,7 +70,7 @@ class CircadianSensor(Entity):
         return self._circadian_lighting._hs_color
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         return {
             "colortemp": self._circadian_lighting._colortemp,
