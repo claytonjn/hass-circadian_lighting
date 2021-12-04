@@ -264,7 +264,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         return self._hs_color
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the switch."""
         return {"hs_color": self._hs_color, "brightness": self._brightness}
 
