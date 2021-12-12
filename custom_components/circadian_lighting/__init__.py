@@ -201,6 +201,10 @@ class CircadianLighting:
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
             try:
+                _LOGGER.debug("Astral version: " + astral.__version__)
+            except Exception as e:
+                _LOGGER.error(e)
+            try:
               location = astral.location.Location()
             except AttributeError:
               location = astral.Location()
