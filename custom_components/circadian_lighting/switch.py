@@ -266,7 +266,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     @property
     def extra_state_attributes(self):
         """Return the attributes of the switch."""
-        return {"hs_color": self._hs_color, "brightness": self._brightness}
+        return {"hs_color": self._hs_color, "brightness": self._brightness, "colortemp": self._color_temperature()}
 
     async def async_turn_on(self, **kwargs):
         """Turn on circadian lighting."""
