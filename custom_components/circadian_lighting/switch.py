@@ -351,10 +351,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
 
     async def update_hue_run(self,websession):
         if self._hue_bridge is not None:
-            bridge = aiohue.Bridge(
+            bridge = aiohue.HueBridgeV1(
                 self._hue_bridge,
-                username=self._hue_username,
-                websession=websession,
+                self._hue_username,
             )
         else:
             try:
@@ -364,10 +363,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 for entry in response["data"]["entries"]:
                     if entry["title"] == "Philips hue":
                         break
-                bridge = aiohue.Bridge(
+                bridge = aiohue.HueBridgeV1(
                     entry["data"]["host"],
-                    username=entry["data"]["username"],
-                    websession=websession,
+                    entry["data"]["api_key"],
                 )
             except Exception as e:
                 raise e
