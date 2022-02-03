@@ -30,6 +30,7 @@ Technical notes: I had to make a lot of assumptions when writing this app
 import bisect
 import logging
 from datetime import timedelta
+from time import sleep
 
 import astral
 import voluptuous as vol
@@ -201,6 +202,10 @@ class CircadianLighting:
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
             try:
+              tries = 0
+              while (not hasattr(astral, 'location')) and tries < 30:
+                  tries += 1
+                  sleep(1)
               location = astral.location.Location()
             except AttributeError:
               location = astral.Location()
