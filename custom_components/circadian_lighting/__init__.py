@@ -31,7 +31,6 @@ import bisect
 import logging
 from datetime import timedelta
 
-import astral
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -201,10 +200,6 @@ class CircadianLighting:
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
-            try:
-                _LOGGER.debug("Astral version: " + astral.__version__)
-            except Exception as e:
-                _LOGGER.error(e)
             _loc = get_astral_location(self.hass)
             if isinstance(_loc, tuple):
                 # Astral v2.2
