@@ -57,6 +57,7 @@ from homeassistant.util.color import (
     color_temperature_to_rgb,
     color_xy_to_hs,
 )
+from homeassistant.helpers.sun import get_astral_location
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,10 +205,13 @@ class CircadianLighting:
                 _LOGGER.debug("Astral version: " + astral.__version__)
             except Exception as e:
                 _LOGGER.error(e)
-            try:
-              location = astral.location.Location()
-            except AttributeError:
-              location = astral.Location()
+            _loc = get_astral_location(self.hass)
+            if isinstance(_loc, tuple):
+                # Astral v2.2
+                location, _ = _loc
+            else:
+                # Astral v1
+                location = _loc
             location.name = "name"
             location.region = "region"
             location.latitude = self._latitude
