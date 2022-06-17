@@ -4,8 +4,8 @@ Circadian Lighting Switch for Home-Assistant.
 
 import asyncio
 import aiohttp
-import aiohue
-from aiohue.discovery import discover_nupnp
+import aiohue_BenoitAnastay
+from aiohue_BenoitAnastay.discovery import discover_nupnp
 import json
 import logging
 from itertools import repeat
