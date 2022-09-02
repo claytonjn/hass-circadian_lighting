@@ -27,8 +27,8 @@ Technical notes: I had to make a lot of assumptions when writing this app
         lights to 2700K (warm white) until your hub goes into Night mode
 """
 
+import asyncio
 import bisect
-import logging
 from datetime import timedelta
 
 import voluptuous as vol
@@ -43,7 +43,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_sunrise,
@@ -51,14 +51,12 @@ from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
 )
+from homeassistant.helpers.sun import get_astral_location
 from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_to_rgb,
     color_xy_to_hs,
 )
-from homeassistant.helpers.sun import get_astral_location
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "circadian_lighting"
 CIRCADIAN_LIGHTING_UPDATE_TOPIC = f"{DOMAIN}_update"
@@ -102,7 +100,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config) -> bool:
     """Set up the Circadian Lighting platform."""
     conf = config[DOMAIN]
     hass.data[DOMAIN] = CircadianLighting(
@@ -116,10 +114,12 @@ def setup(hass, config):
         latitude=conf.get(CONF_LATITUDE, hass.config.latitude),
         longitude=conf.get(CONF_LONGITUDE, hass.config.longitude),
         elevation=conf.get(CONF_ELEVATION, hass.config.elevation),
-        interval=conf.get(CONF_INTERVAL),
         transition=conf.get(ATTR_TRANSITION),
     )
-    load_platform(hass, "sensor", DOMAIN, {}, config)
+    await hass.data[DOMAIN]._async_init(interval=conf.get(CONF_INTERVAL))
+    hass.async_create_task(
+        async_load_platform(hass, "sensor", DOMAIN, {}, config)
+    )
 
     return True
 
@@ -139,7 +139,6 @@ class CircadianLighting:
         latitude,
         longitude,
         elevation,
-        interval,
         transition,
     ):
         self.hass = hass
@@ -154,53 +153,53 @@ class CircadianLighting:
         self._elevation = elevation
         self._transition = transition
 
-        self._percent = self.calc_percent()
-        self._colortemp = self.calc_colortemp()
-        self._rgb_color = self.calc_rgb()
-        self._xy_color = self.calc_xy()
-        self._hs_color = self.calc_hs()
+    async def _async_init(self, interval):
+        self._percent = await self.async_calc_percent()
+        self._colortemp = await self.async_calc_colortemp()
+        self._rgb_color = await self.async_calc_rgb()
+        self._xy_color = await self.async_calc_xy()
 
         if self._manual_sunrise is not None:
             async_track_time_change(
                 self.hass,
-                self.update,
+                self.async_update,
                 hour=self._manual_sunrise.hour,
                 minute=self._manual_sunrise.minute,
                 second=self._manual_sunrise.second,
             )
         else:
-            async_track_sunrise(self.hass, self.update, self._sunrise_offset)
+            async_track_sunrise(self.hass, self.async_update, self._sunrise_offset)
 
         if self._manual_sunset is not None:
             async_track_time_change(
                 self.hass,
-                self.update,
+                self.async_update,
                 hour=self._manual_sunset.hour,
                 minute=self._manual_sunset.minute,
                 second=self._manual_sunset.second,
             )
         else:
-            async_track_sunset(self.hass, self.update, self._sunset_offset)
+            async_track_sunset(self.hass, self.async_update, self._sunset_offset)
 
-        async_track_time_interval(self.hass, self.update, interval)
+        async_track_time_interval(self.hass, self.async_update, interval)
 
-    def _replace_time(self, date, key):
+    async def _async_replace_time(self, date, key):
         other_date = self._manual_sunrise if key == "sunrise" else self._manual_sunset
-        return date.replace(
+        return await self.hass.async_add_executor_job(date.replace,
             hour=other_date.hour,
             minute=other_date.minute,
             second=other_date.second,
             microsecond=other_date.microsecond,
         )
 
-    def _get_sun_events(self, date):
+    async def _async_get_sun_events(self, date):
         if self._manual_sunrise is not None and self._manual_sunset is not None:
-            sunrise = self._replace_time(date, "sunrise")
-            sunset = self._replace_time(date, "sunset")
+            sunrise = await self._async_replace_time(date, "sunrise")
+            sunset = await self._async_replace_time(date, "sunset")
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
-            _loc = get_astral_location(self.hass)
+            _loc = await self.hass.async_add_executor_job(get_astral_location, self.hass)
             if isinstance(_loc, tuple):
                 # Astral v2.2
                 location, _ = _loc
@@ -214,23 +213,23 @@ class CircadianLighting:
             location.elevation = self._elevation
 
             if self._manual_sunrise is not None:
-                sunrise = self._replace_time(date, "sunrise")
+                sunrise = await self._async_replace_time(date, "sunrise")
             else:
-                sunrise = location.sunrise(date)
+                sunrise = await self.hass.async_add_executor_job(location.sunrise, date)
 
             if self._manual_sunset is not None:
-                sunset = self._replace_time(date, "sunset")
+                sunset = await self._async_replace_time(date, "sunset")
             else:
-                sunset = location.sunset(date)
+                sunset = await self.hass.async_add_executor_job(location.sunset, date)
 
             try:
-              solar_noon = location.noon(date)
+                solar_noon = await self.hass.async_add_executor_job(location.noon, date)
             except AttributeError:
-              solar_noon = location.solar_noon(date)
+                solar_noon = await self.hass.async_add_executor_job(location.solar_noon, date)
             try:
-              solar_midnight = location.midnight(date)
+                solar_midnight = await self.hass.async_add_executor_job(location.midnight, date)
             except AttributeError:
-              solar_midnight = location.solar_midnight(date)
+                solar_midnight = await self.hass.async_add_executor_job(location.solar_midnight, date)
 
         if self._sunrise_offset is not None:
             sunrise = sunrise + self._sunrise_offset
@@ -248,19 +247,19 @@ class CircadianLighting:
             k: dt.astimezone(dt_util.UTC).timestamp() for k, dt in datetimes.items()
         }
 
-    def _relevant_events(self, now):
+    async def _async_relevant_events(self, now):
         events = []
         for days in [-1, 0, 1]:
-            sun_events = self._get_sun_events(now + timedelta(days=days))
+            sun_events = await self._async_get_sun_events(now + timedelta(days=days))
             events.extend(list(sun_events.items()))
         events = sorted(events, key=lambda x: x[1])
         index_now = bisect.bisect([ts for _, ts in events], now.timestamp())
         return dict(events[index_now - 2 : index_now + 2])
 
-    def calc_percent(self):
-        now = dt_util.utcnow()
-        now_ts = now.timestamp()
-        today = self._relevant_events(now)
+    async def async_calc_percent(self):
+        now = await self.hass.async_add_executor_job(dt_util.utcnow)
+        now_ts = await self.hass.async_add_executor_job(now.timestamp)
+        today = await self._async_relevant_events(now)
         # Figure out where we are in time so we know which half of the
         # parabola to calculate. We're generating a different
         # sunset-sunrise parabola for before and after solar midnight.
@@ -294,7 +293,7 @@ class CircadianLighting:
         percentage = a * (now_ts - h) ** 2 + k
         return percentage
 
-    def calc_colortemp(self):
+    async def async_calc_colortemp(self):
         if self._percent > 0:
             delta = self._max_colortemp - self._min_colortemp
             percent = self._percent / 100
@@ -302,20 +301,22 @@ class CircadianLighting:
         else:
             return self._min_colortemp
 
-    def calc_rgb(self):
-        return color_temperature_to_rgb(self._colortemp)
+    async def async_calc_rgb(self):
+        return await self.hass.async_add_executor_job(color_temperature_to_rgb, self._colortemp)
 
-    def calc_xy(self):
-        return color_RGB_to_xy(*self.calc_rgb())
+    async def async_calc_xy(self):
+        rgb = await self.async_calc_rgb()
+        return await self.hass.async_add_executor_job(color_RGB_to_xy, *rgb)
 
-    def calc_hs(self):
-        return color_xy_to_hs(*self.calc_xy())
+    async def async_calc_hs(self):
+        xy = await self.async_calc_xy()
+        return await self.hass.async_add_executor_job(color_xy_to_hs, *xy)
 
-    async def update(self, _=None):
+    async def async_update(self, _=None):
         """Update Circadian Values."""
-        self._percent = self.calc_percent()
-        self._colortemp = self.calc_colortemp()
-        self._rgb_color = self.calc_rgb()
-        self._xy_color = self.calc_xy()
-        self._hs_color = self.calc_hs()
+        self._percent = await self.async_calc_percent()
+        self._colortemp = await self.async_calc_colortemp()
+        self._rgb_color = await self.async_calc_rgb()
+        self._xy_color = await self.async_calc_xy()
+        self._hs_color = await self.async_calc_hs()
         async_dispatcher_send(self.hass, CIRCADIAN_LIGHTING_UPDATE_TOPIC)
