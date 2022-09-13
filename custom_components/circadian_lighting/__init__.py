@@ -185,7 +185,7 @@ class CircadianLighting:
 
     async def _async_replace_time(self, date, key):
         other_date = self._manual_sunrise if key == "sunrise" else self._manual_sunset
-        return await self.hass.async_add_executor_job(date.replace,
+        return date.replace(
             hour=other_date.hour,
             minute=other_date.minute,
             second=other_date.second,
