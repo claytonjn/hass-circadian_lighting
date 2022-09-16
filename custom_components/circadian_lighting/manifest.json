@@ -6,6 +6,6 @@
   "issue_tracker": "https://github.com/claytonjn/hass-circadian_lighting/issues",
   "dependencies": ["sensor","switch"],
   "codeowners": ["@claytonjn"],
-  "requirements": [],
+  "requirements": ["colour-science"],
   "iot_class": "calculated"
 }
