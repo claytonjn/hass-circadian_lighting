@@ -360,7 +360,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 response = json.load(entriesJson)
 
                 for entry in response["data"]["entries"]:
-                    if entry["title"] == "Philips hue":
+                    if entry["domain"] == "hue":
                         break
                 bridge = aiohue_BenoitAnastay.HueBridgeV1(
                     entry["data"]["host"],
@@ -382,7 +382,14 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 color_temp = self._calc_ct()
                 lightstates = await scene.lightstates
                 for light_id in scene.lights:
-                    await scene.set_lightstate(id=light_id,on=lightstates[light_id]["on"],bri=int((self._brightness / 100) * 254),ct=color_temp)
+                    try:
+                        await scene.set_lightstate(id=light_id,on=lightstates[light_id]["on"],bri=int((self._brightness / 100) * 254),ct=color_temp)
+                    except Exception as e:
+                        _LOGGER.error(
+                "Cannot update scene %s",
+                id,
+            )
+                        pass
 
     def _is_disabled(self):
         return (
