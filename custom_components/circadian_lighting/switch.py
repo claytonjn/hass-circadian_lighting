@@ -375,7 +375,6 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                     )
                 )
             )
-            await asyncio.wait(tasks)
         if tasks:
             await asyncio.wait(tasks)
 
