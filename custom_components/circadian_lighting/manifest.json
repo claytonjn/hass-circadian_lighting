@@ -7,5 +7,5 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/claytonjn/hass-circadian_lighting/issues",
   "requirements": [],
-  "version": "2.1.4-beta"
+  "version": "2.1.4"
 }
