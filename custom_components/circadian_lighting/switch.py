@@ -369,8 +369,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 service_data,
             )
             tasks.append(
-                self.hass.services.async_call(
-                    LIGHT_DOMAIN, SERVICE_TURN_ON, service_data
+                self.hass.async_create_task(
+                    self.hass.services.async_call(
+                        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data
+                    )
                 )
             )
         if tasks:
