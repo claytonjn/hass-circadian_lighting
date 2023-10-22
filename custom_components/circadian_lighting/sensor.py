@@ -79,6 +79,7 @@ class CircadianSensor(Entity):
         return {
             "colortemp": self._circadian_lighting._colortemp,
             "rgb_color": self._circadian_lighting._rgb_color,
+            "rgbw_color": self._circadian_lighting._rgbw_color,
             "xy_color": self._circadian_lighting._xy_color,
         }
 

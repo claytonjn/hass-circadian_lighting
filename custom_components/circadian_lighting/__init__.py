@@ -27,7 +27,6 @@ Technical notes: I had to make a lot of assumptions when writing this app
         lights to 2700K (warm white) until your hub goes into Night mode
 """
 
-import asyncio
 import bisect
 from datetime import timedelta
 
@@ -56,6 +55,7 @@ from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_to_rgb,
     color_xy_to_hs,
+    color_rgb_to_rgbw,
 )
 
 DOMAIN = "circadian_lighting"
@@ -157,6 +157,7 @@ class CircadianLighting:
         self._percent = await self.async_calc_percent()
         self._colortemp = await self.async_calc_colortemp()
         self._rgb_color = await self.async_calc_rgb()
+        self._rgbw_color = await self.async_calc_rgbw()
         self._xy_color = await self.async_calc_xy()
 
         if self._manual_sunrise is not None:
@@ -304,6 +305,10 @@ class CircadianLighting:
     async def async_calc_rgb(self):
         return await self.hass.async_add_executor_job(color_temperature_to_rgb, self._colortemp)
 
+    async def async_calc_rgbw(self):
+        rgb = await self.async_calc_rgb()
+        return await self.hass.async_add_executor_job(color_rgb_to_rgbw, *rgb)
+
     async def async_calc_xy(self):
         rgb = await self.async_calc_rgb()
         return await self.hass.async_add_executor_job(color_RGB_to_xy, *rgb)
@@ -317,6 +322,7 @@ class CircadianLighting:
         self._percent = await self.async_calc_percent()
         self._colortemp = await self.async_calc_colortemp()
         self._rgb_color = await self.async_calc_rgb()
+        self._rgbw_color = await self.async_calc_rgbw()
         self._xy_color = await self.async_calc_xy()
         self._hs_color = await self.async_calc_hs()
         async_dispatcher_send(self.hass, CIRCADIAN_LIGHTING_UPDATE_TOPIC)

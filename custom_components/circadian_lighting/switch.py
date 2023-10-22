@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
-    ATTR_XY_COLOR,
+    ATTR_XY_COLOR, ATTR_RGBW_COLOR,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.light import VALID_TRANSITION, is_on
@@ -34,7 +34,7 @@ from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_kelvin_to_mired,
     color_temperature_to_rgb,
-    color_xy_to_hs,
+    color_xy_to_hs, color_rgb_to_rgbw,
 )
 
 from . import CIRCADIAN_LIGHTING_UPDATE_TOPIC, DOMAIN
@@ -45,6 +45,7 @@ ICON = "mdi:theme-light-dark"
 
 CONF_LIGHTS_CT = "lights_ct"
 CONF_LIGHTS_RGB = "lights_rgb"
+CONF_LIGHTS_RGBW = "lights_rgbw"
 CONF_LIGHTS_XY = "lights_xy"
 CONF_LIGHTS_BRIGHT = "lights_brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
@@ -65,6 +66,7 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default="Circadian Lighting"): cv.string,
         vol.Optional(CONF_LIGHTS_CT): cv.entity_ids,
         vol.Optional(CONF_LIGHTS_RGB): cv.entity_ids,
+        vol.Optional(CONF_LIGHTS_RGBW): cv.entity_ids,
         vol.Optional(CONF_LIGHTS_XY): cv.entity_ids,
         vol.Optional(CONF_LIGHTS_BRIGHT): cv.entity_ids,
         vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST, default=False): cv.boolean,
@@ -102,6 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name=config.get(CONF_NAME),
             lights_ct=config.get(CONF_LIGHTS_CT, []),
             lights_rgb=config.get(CONF_LIGHTS_RGB, []),
+            lights_rgbw=config.get(CONF_LIGHTS_RGBW, []),
             lights_xy=config.get(CONF_LIGHTS_XY, []),
             lights_brightness=config.get(CONF_LIGHTS_BRIGHT, []),
             disable_brightness_adjust=config.get(CONF_DISABLE_BRIGHTNESS_ADJUST),
@@ -160,25 +163,26 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Circadian Lighting switch."""
 
     def __init__(
-        self,
-        hass,
-        circadian_lighting,
-        name,
-        lights_ct,
-        lights_rgb,
-        lights_xy,
-        lights_brightness,
-        disable_brightness_adjust,
-        min_brightness,
-        max_brightness,
-        sleep_entity,
-        sleep_state,
-        sleep_colortemp,
-        sleep_brightness,
-        disable_entity,
-        disable_state,
-        initial_transition,
-        only_once,
+            self,
+            hass,
+            circadian_lighting,
+            name,
+            lights_ct,
+            lights_rgb,
+            lights_rgbw,
+            lights_xy,
+            lights_brightness,
+            disable_brightness_adjust,
+            min_brightness,
+            max_brightness,
+            sleep_entity,
+            sleep_state,
+            sleep_colortemp,
+            sleep_brightness,
+            disable_entity,
+            disable_state,
+            initial_transition,
+            only_once,
     ):
         """Initialize the Circadian Lighting switch."""
         self.hass = hass
@@ -202,6 +206,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._only_once = only_once
         self._lights_types = dict(zip(lights_ct, repeat("ct")))
         self._lights_types.update(zip(lights_rgb, repeat("rgb")))
+        self._lights_types.update(zip(lights_rgbw, repeat("rgbw")))
         self._lights_types.update(zip(lights_xy, repeat("xy")))
         self._lights_types.update(zip(lights_brightness, repeat("brightness")))
         self._lights = list(self._lights_types.keys())
@@ -297,6 +302,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     def _calc_rgb(self):
         return color_temperature_to_rgb(self._color_temperature())
 
+    def _calc_rgbw(self):
+        return color_rgb_to_rgbw(*self._calc_rgb())
+
     def _calc_xy(self):
         return color_RGB_to_xy(*self._calc_rgb())
 
@@ -363,6 +371,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
                 service_data[ATTR_RGB_COLOR] = (int(r), int(g), int(b))
             elif light_type == "xy":
                 service_data[ATTR_XY_COLOR] = self._calc_xy()
+            elif light_type == "rgbw":
+                r, g, b, w = self._calc_rgbw()
+                service_data[ATTR_RGBW_COLOR] = (int(r), int(g), int(b), int(w))
 
             _LOGGER.debug(
                 "Scheduling 'light.turn_on' with the following 'service_data': %s",
