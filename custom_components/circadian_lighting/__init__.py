@@ -307,7 +307,7 @@ class CircadianLighting:
 
     async def async_calc_rgbw(self):
         rgb = await self.async_calc_rgb()
-        return await self.hass.async_add_executor_job(color_rgb_to_rgbw, *rgb)
+        return rgb + tuple([0])
 
     async def async_calc_xy(self):
         rgb = await self.async_calc_rgb()

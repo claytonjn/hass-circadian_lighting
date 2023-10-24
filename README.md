@@ -49,7 +49,7 @@ Switch configuration variables:
 * **name** (_Optional_): The name to use when displaying this switch.
 * **lights_ct** (_Optional_): array: List of light entities which should be set in mireds.
 * **lights_rgb** (_Optional_): array: List of light entities which should be set in RGB.
-* **lights_rgbw** (_Optional_): array: List of light entities which should be set in RGBW.
+* **lights_rgbw** (_Optional_): array: List of light entities which should be set in RGBW. This is useful for RGBW LED such as SK6812.
 * **lights_xy** (_Optional_): array: List of light entities which should be set in XY.
 * **lights_brightness** (_Optional_): array: List of light entities which should only have brightness adjusted.
 

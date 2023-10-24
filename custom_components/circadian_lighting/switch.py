@@ -303,7 +303,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         return color_temperature_to_rgb(self._color_temperature())
 
     def _calc_rgbw(self):
-        return color_rgb_to_rgbw(*self._calc_rgb())
+        return self._calc_rgb() + tuple([0])
 
     def _calc_xy(self):
         return color_RGB_to_xy(*self._calc_rgb())
