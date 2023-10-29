@@ -1,0 +1,18 @@
+# Copied from https://stackoverflow.com/a/75654538
+name: Check pull request source branch
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  check-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branches
+        run: |
+          if [ ${{ github.head_ref }} != "dev" ] && [ ${{ github.base_ref }} == "main" ]; then
+            echo "Pull requests to main branch are only allowed from dev branch. If you would like to contribute to this project, please open pull requests against the dev branch."
+            exit 1
+          fi
