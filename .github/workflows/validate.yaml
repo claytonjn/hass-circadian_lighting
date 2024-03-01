@@ -21,7 +21,7 @@ jobs:
     name: Hassfest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Validate
         uses: home-assistant/actions/hassfest@master
   test_advice_flake8:
