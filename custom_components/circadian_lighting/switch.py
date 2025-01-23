@@ -234,12 +234,12 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         async_track_state_change_event(
             self.hass, self._lights, self._light_state_changed
         )
-        track_kwargs = dict(hass=self.hass, action=self._state_changed)
+        track_kwargs = dict(hass=self.hass, action=self._light_state_changed)
         if self._sleep_entity is not None:
             sleep_kwargs = dict(track_kwargs, entity_ids=self._sleep_entity)
             async_track_state_change(**sleep_kwargs, to_state=self._sleep_state)
             async_track_state_change(**sleep_kwargs, from_state=self._sleep_state)
-
+        
         if self._disable_entity is not None:
             async_track_state_change(
                 **track_kwargs,
