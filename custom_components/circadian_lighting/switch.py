@@ -231,7 +231,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         )
 
         # Add listeners
-        async_track_state_change(
+        async_track_state_change_event(
             self.hass, self._lights, self._light_state_changed, to_state="on"
         )
         track_kwargs = dict(hass=self.hass, action=self._state_changed)
