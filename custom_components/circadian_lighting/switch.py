@@ -321,6 +321,23 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._brightness = self._calc_brightness()
         await self._adjust_lights(lights or self._lights, transition)
 
+    async def _light_state_changed(self, event):
+        """Handle light state changes."""
+        entity_id = event.data.get("entity_id")
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        # Ensure the new state is "on"
+        if new_state and new_state.state == "on":
+            # Check if the old state was not "on" or was None
+            if old_state is None or old_state.state != "on":
+                _LOGGER.debug(
+                    "Light state changed: %s -> %s",
+                    old_state and old_state.state,
+                    new_state.state,
+                )
+                await self._force_update_switch(lights=[entity_id])
+                
     async def _force_update_switch(self, lights=None):
         return await self._update_switch(
             lights, transition=self._initial_transition, force=True
