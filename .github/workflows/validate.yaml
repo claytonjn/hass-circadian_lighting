@@ -28,15 +28,16 @@ jobs:
     name: Test + advice with flake8
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
-      - name: Cache
-        uses: actions/cache@v2
+          python-version: '3.x'
+      - name: Cache dependencies
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: pip-flake8
