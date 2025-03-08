@@ -241,10 +241,8 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
             async_track_state_change_event(**sleep_kwargs)
 
         if self._disable_entity is not None:
-            async_track_state_change(
-                **track_kwargs,
-                entity_ids=self._disable_entity,
-                from_state=self._disable_state,
+            async_track_state_change_event(
+                self.hass, self._disable_entity, self._state_changed
             )
 
         if self._state is not None:  # If not None, we got an initial value
