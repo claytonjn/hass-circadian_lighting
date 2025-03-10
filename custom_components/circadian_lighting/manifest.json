@@ -6,6 +6,6 @@
   "documentation": "https://github.com/claytonjn/hass-circadian_lighting",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/claytonjn/hass-circadian_lighting/issues",
-  "requirements": [],
+  "requirements": ["aiohue-BenoitAnastay"],
   "version": "2.1.4"
 }

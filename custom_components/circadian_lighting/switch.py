@@ -3,6 +3,10 @@ Circadian Lighting Switch for Home-Assistant.
 """
 
 import asyncio
+import aiohttp
+import aiohue_BenoitAnastay
+from aiohue_BenoitAnastay.discovery import discover_nupnp
+import json
 import logging
 from itertools import repeat
 
@@ -59,6 +63,9 @@ CONF_DISABLE_ENTITY = "disable_entity"
 CONF_DISABLE_STATE = "disable_state"
 CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION = "initial_transition", 1
 CONF_ONLY_ONCE = "only_once"
+CONF_HUE_USERNAME = "hue_username"
+CONF_HUE_KEYWORD  = "hue_keyword"
+CONF_HUE_BRIDGE   = "hue_bridge"
 
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -89,6 +96,9 @@ PLATFORM_SCHEMA = vol.Schema(
             CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION
         ): VALID_TRANSITION,
         vol.Optional(CONF_ONLY_ONCE, default=False): cv.boolean,
+        vol.Optional(CONF_HUE_USERNAME): cv.string,
+        vol.Optional(CONF_HUE_KEYWORD): cv.string,
+        vol.Optional(CONF_HUE_BRIDGE): cv.string,
     }
 )
 
@@ -116,6 +126,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             disable_state=config.get(CONF_DISABLE_STATE),
             initial_transition=config.get(CONF_INITIAL_TRANSITION),
             only_once=config.get(CONF_ONLY_ONCE),
+            hue_username=config.get(CONF_HUE_USERNAME),
+            hue_keyword=config.get(CONF_HUE_KEYWORD),
+            hue_bridge=config.get(CONF_HUE_BRIDGE),
         )
         add_devices([switch])
 
@@ -180,6 +193,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         disable_state,
         initial_transition,
         only_once,
+        hue_username,
+        hue_keyword,
+        hue_bridge
     ):
         """Initialize the Circadian Lighting switch."""
         self.hass = hass
@@ -201,6 +217,9 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._disable_state = disable_state
         self._initial_transition = initial_transition
         self._only_once = only_once
+        self._hue_username = hue_username
+        self._hue_keyword = hue_keyword
+        self._hue_bridge = hue_bridge
         self._lights_types = dict(zip(lights_ct, repeat("ct")))
         self._lights_types.update(zip(lights_rgb, repeat("rgb")))
         self._lights_types.update(zip(lights_xy, repeat("xy")))
@@ -318,11 +337,57 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._hs_color = self._calc_hs()
         self._brightness = self._calc_brightness()
         await self._adjust_lights(lights or self._lights, transition)
+        if self._hue_keyword is not None:
+            async with aiohttp.ClientSession() as session:
+                await self.update_hue_run(session)
 
     async def _force_update_switch(self, lights=None):
         return await self._update_switch(
             lights, transition=self._initial_transition, force=True
         )
+
+    async def update_hue_run(self,websession):
+        if self._hue_bridge is not None:
+            bridge = aiohue_BenoitAnastay.HueBridgeV1(
+                self._hue_bridge,
+                self._hue_username,
+            )
+        else:
+            try:
+                entriesJson = open('/config/.storage/core.config_entries',)
+                response = json.load(entriesJson)
+
+                for entry in response["data"]["entries"]:
+                    if entry["domain"] == "hue":
+                        break
+                bridge = aiohue_BenoitAnastay.HueBridgeV1(
+                    entry["data"]["host"],
+                    entry["data"]["api_key"],
+                )
+            except Exception as e:
+                raise e
+        if bridge is None:
+            if self._hue_username is None:
+                return False
+            bridges = await discover_nupnp(websession)
+            bridge = bridges[0]
+            bridge.username = self._hue_username
+
+        await bridge.initialize()
+        for id in bridge.scenes:
+            scene = bridge.scenes[id]
+            if self._hue_keyword in scene.name:
+                color_temp = self._calc_ct()
+                lightstates = await scene.lightstates
+                for light_id in scene.lights:
+                    try:
+                        await scene.set_lightstate(id=light_id,on=lightstates[light_id]["on"],bri=int((self._brightness / 100) * 254),ct=color_temp)
+                    except Exception as e:
+                        _LOGGER.error(
+                "Cannot update scene %s",
+                id,
+            )
+                        pass
 
     def _is_disabled(self):
         return (
