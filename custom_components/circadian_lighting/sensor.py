@@ -2,11 +2,11 @@
 Circadian Lighting Sensor for Home-Assistant.
 """
 
-from homeassistant.core import callback, HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import CIRCADIAN_LIGHTING_UPDATE_TOPIC, DOMAIN
 
