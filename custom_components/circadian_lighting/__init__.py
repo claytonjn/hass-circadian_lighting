@@ -27,7 +27,6 @@ Technical notes: I had to make a lot of assumptions when writing this app
         lights to 2700K (warm white) until your hub goes into Night mode
 """
 
-import asyncio
 import bisect
 from datetime import timedelta
 

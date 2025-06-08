@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -33,7 +33,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy,
-    color_temperature_kelvin_to_mired,
     color_temperature_to_rgb,
     color_xy_to_hs,
 )
@@ -289,9 +288,6 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
             else self._sleep_colortemp
         )
 
-    def _calc_ct(self):
-        return color_temperature_kelvin_to_mired(self._color_temperature())
-
     def _calc_rgb(self):
         return color_temperature_to_rgb(self._color_temperature())
 
@@ -355,7 +351,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
 
             light_type = self._lights_types[light]
             if light_type == "ct":
-                service_data[ATTR_COLOR_TEMP] = int(self._calc_ct())
+                service_data[ATTR_COLOR_TEMP_KELVIN] = int(self._color_temperature())
             elif light_type == "rgb":
                 r, g, b = self._calc_rgb()
                 service_data[ATTR_RGB_COLOR] = (int(r), int(g), int(b))
@@ -381,7 +377,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
 
-        assert new_state and new_state.state == "on"
+        if not new_state or new_state.state != "on":
+            _LOGGER.debug("Ignoring state change for %s: new state is %s", entity_id, new_state.state if new_state else "None")
+            return  # Exit early if new_state is None or not "on"
+    
         if old_state is None or old_state.state != "on":
             _LOGGER.debug(_difference_between_states(old_state, new_state))
             await self._force_update_switch(lights=[entity_id])
