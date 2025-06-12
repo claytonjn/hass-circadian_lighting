@@ -54,6 +54,8 @@ Switch configuration variables:
 
 [_Advanced Configuration_](https://github.com/claytonjn/hass-circadian_lighting/wiki/Advanced-Configuration#switch-configuration-variables)
 
+ `~/.homeassistant/configuration.yaml` is where the file is usually located in Unix and macOS operating systems.
+
 <hr>
 
 ### Graphs!
