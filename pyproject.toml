@@ -1,5 +1,6 @@
 [project]
 name = "hass-circadian_lighting"
+dynamic = ["version"]
 
 [tool.ruff]
 max-complexity = 15
