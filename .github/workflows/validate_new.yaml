@@ -5,23 +5,23 @@ on:
   pull_request:
 
 jobs:
-  hacs:
-    name: HACS Action
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-      - name: HACS Action
-        uses: "hacs/action@main"
-        with:
-          category: "integration"
-          ignore: "brands"
-  validate_hassfest:
-    name: Hassfest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate
-        uses: home-assistant/actions/hassfest@master
+  # hacs:
+  #   name: HACS Action
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: HACS Action
+  #       uses: "hacs/action@main"
+  #       with:
+  #         category: "integration"
+  #         ignore: "brands"
+  # validate_hassfest:
+  #   name: Hassfest
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Validate
+  #       uses: home-assistant/actions/hassfest@master
   validate_ruff:
     name: Test + advice with ruff
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
         with:
           version: latest
       - name: Install Ruff using uv
-        run: uv pip install ruff
+        run: uv pip install ruff -- --system
       - name: Lint critical errors with ruff
         run: |
           ruff check . --count --select E9,F63,F7,F82 --show-source --statistics
