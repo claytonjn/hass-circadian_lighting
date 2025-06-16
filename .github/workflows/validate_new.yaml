@@ -41,7 +41,7 @@ jobs:
           uv run ruff check . --select E9,F63,F7,F82 --statistics
       - name: Don't mind these (less strict)
         run: |
-          uv run ruff check . --exit-zero --statistics --select I,COM812,E203,E800
+          uv run ruff check . --exit-zero --statistics --select I,COM812,E203,T201
       - name: Docstrings
         run: |
           uv run ruff check . --exit-zero --statistics --select D,DAR
@@ -54,4 +54,4 @@ jobs:
           echo "Make sure you check with the find command before you remove anything!"
       - name: General stats, ignoring specific codes
         run: |
-          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,E800,D,DAR,F
+          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,T201,D,DAR,F
