@@ -1,3 +1,6 @@
+[project]
+name = "hass-circadian_lighting"
+
 [tool.ruff]
 max-complexity = 15
 line-length = 90
