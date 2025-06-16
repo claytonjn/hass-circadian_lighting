@@ -38,7 +38,7 @@ jobs:
         run: uv pip install ruff
       - name: Lint critical errors with ruff
         run: |
-          uv run ruff check . --select E9,F63,F7,F82 --show-source --statistics
+          uv run ruff check . --select E9,F63,F7,F82 --statistics
       - name: Don't mind these (less strict)
         run: |
           uv run ruff check . --exit-zero --max-complexity 15 --line-length 90 --statistics --select I,P,WPS305,C812,E203,W503,E800
