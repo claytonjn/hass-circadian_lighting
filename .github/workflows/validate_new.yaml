@@ -41,17 +41,17 @@ jobs:
           uv run ruff check . --select E9,F63,F7,F82 --statistics
       - name: Don't mind these (less strict)
         run: |
-          uv run ruff check . --exit-zero --line-length 90 --statistics --select I,P,WPS305,C812,E203,W503,E800 -- --max-complexity 15 
+          uv run ruff check . --exit-zero --statistics --select I,P,WPS305,C812,E203,W503,E800
       - name: Docstrings
         run: |
-          uv run ruff check . --exit-zero --line-length 90 --statistics --select D,DAR -- --max-complexity 15
+          uv run ruff check . --exit-zero --statistics --select D,DAR
       - name: Unused code warnings
         run: |
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
-          uv run ruff check . --exit-zero --line-length 90 --statistics --select F -- --max-complexity 15
+          uv run ruff check . --exit-zero --statistics --select F
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
       - name: General stats, ignoring specific codes
         run: |
-          uv run ruff check . --exit-zero --line-length 90 --statistics --ignore I,P,WPS305,C812,E203,W503,E800,D,DAR,F -- --max-complexity 15
+          uv run ruff check . --exit-zero --statistics --ignore I,P,WPS305,C812,E203,W503,E800,D,DAR,F
