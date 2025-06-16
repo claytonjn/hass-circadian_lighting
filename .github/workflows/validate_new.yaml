@@ -38,20 +38,20 @@ jobs:
         run: uv pip install ruff
       - name: Lint critical errors with ruff
         run: |
-          uv run ruff check . --select E9,F63,F7,F82 --statistics --show-source
+          uv run ruff check . --select E9,F63,F7,F82 --statistics --show-files
       - name: Don't mind these (less strict)
         run: |
-          uv run ruff check . --exit-zero --statistics --select I,COM812,E203,T201 --show-source
+          uv run ruff check . --exit-zero --statistics --select I,COM812,E203,T201 --show-files
       - name: Docstrings
         run: |
-          uv run ruff check . --exit-zero --statistics --select D --show-source
+          uv run ruff check . --exit-zero --statistics --select D --show-files
       - name: Unused code warnings
         run: |
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
-          uv run ruff check . --exit-zero --statistics --select F --show-source
+          uv run ruff check . --exit-zero --statistics --select F --show-files
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
       - name: General stats, ignoring specific codes
         run: |
-          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,T201,D,F --show-source
+          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,T201,D,F --show-files
