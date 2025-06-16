@@ -44,7 +44,7 @@ jobs:
           uv run ruff check . --exit-zero --statistics --select I,COM812,E203,T201
       - name: Docstrings
         run: |
-          uv run ruff check . --exit-zero --statistics --select D,DAR
+          uv run ruff check . --exit-zero --statistics --select D
       - name: Unused code warnings
         run: |
           echo "Some stuff may not be used, but is used in commented out code."
@@ -54,4 +54,4 @@ jobs:
           echo "Make sure you check with the find command before you remove anything!"
       - name: General stats, ignoring specific codes
         run: |
-          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,T201,D,DAR,F
+          uv run ruff check . --exit-zero --statistics --ignore I,COM812,E203,T201,D,F
