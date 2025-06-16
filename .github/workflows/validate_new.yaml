@@ -1,29 +1,31 @@
-name: Validate With UV and Ruff
+name: Validate
 
 on:
   push:
-  # pull_request:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
-  # hacs:
-  #   name: HACS Action
-  #   runs-on: "ubuntu-latest"
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: HACS Action
-  #       uses: "hacs/action@main"
-  #       with:
-  #         category: "integration"
-  #         ignore: "brands"
-  # validate_hassfest:
-  #   name: Hassfest
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Validate
-  #       uses: home-assistant/actions/hassfest@master
+  hacs:
+    name: HACS Action
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS Action
+        uses: "hacs/action@main"
+        with:
+          category: "integration"
+          ignore: "brands"
+  validate_hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate
+        uses: home-assistant/actions/hassfest@master
   validate_ruff:
-    name: Test + advice with ruff
+    name: Test + Advice with Ruff
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
