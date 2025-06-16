@@ -49,7 +49,7 @@ jobs:
         run: |
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
-          uv run ruff check . --exit-zero --max-complexity 15 --line-length 90 --statistics --select F
+          uv run ruff check . --exit-zero -- --max-complexity 15 --line-length 90 --statistics --select F
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
       - name: General stats, ignoring specific codes
