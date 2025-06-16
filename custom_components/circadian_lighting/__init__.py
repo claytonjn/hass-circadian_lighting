@@ -27,14 +27,12 @@ Technical notes: I had to make a lot of assumptions when writing this app
         lights to 2700K (warm white) until your hub goes into Night mode
 """
 
-import asyncio
 import bisect
 from datetime import timedelta
 
-import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+import voluptuous as vol
 from homeassistant.components.light import ATTR_TRANSITION, VALID_TRANSITION
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -43,6 +41,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
@@ -57,6 +56,7 @@ from homeassistant.util.color import (
     color_temperature_to_rgb,
     color_xy_to_hs,
 )
+from packaging import version
 
 DOMAIN = "circadian_lighting"
 CIRCADIAN_LIGHTING_UPDATE_TOPIC = f"{DOMAIN}_update"
@@ -99,6 +99,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+REQUIRED_HA_VERSION = "2024.1.0"
+
+if version.parse(HA_VERSION) < version.parse(REQUIRED_HA_VERSION):
+    raise RuntimeError(f"This integration requires Home Assistant {REQUIRED_HA_VERSION} or newer.")
 
 async def async_setup(hass, config) -> bool:
     """Set up the Circadian Lighting platform."""
