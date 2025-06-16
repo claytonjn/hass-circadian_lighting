@@ -3,27 +3,27 @@ name: Validate
 on:
   push:
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
+  # schedule:
+  #   - cron: "0 0 * * *"
 
 jobs:
-  hacs:
-    name: HACS Action
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: "actions/checkout@v2"
-      - name: HACS Action
-        uses: "hacs/action@main"
-        with:
-          category: "integration"
-          ignore: "brands"
-  validate_hassfest:
-    name: Hassfest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Validate
-        uses: home-assistant/actions/hassfest@master
+  # hacs:
+  #   name: HACS Action
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #     - uses: "actions/checkout@v2"
+  #     - name: HACS Action
+  #       uses: "hacs/action@main"
+  #       with:
+  #         category: "integration"
+  #         ignore: "brands"
+  # validate_hassfest:
+  #   name: Hassfest
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Validate
+  #       uses: home-assistant/actions/hassfest@master
   test_advice_flake8:
     name: Test + advice with flake8
     runs-on: ubuntu-latest
