@@ -11,7 +11,7 @@ jobs:
     name: HACS Action
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v2"
+      - uses: actions/checkout@v4
       - name: HACS Action
         uses: "hacs/action@main"
         with:
@@ -21,47 +21,39 @@ jobs:
     name: Hassfest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Validate
         uses: home-assistant/actions/hassfest@master
-  test_advice_flake8:
-    name: Test + advice with flake8
+  validate_ruff:
+    name: Test + Advice with Ruff
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
         with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-flake8
-      - name: Install dependencies
+          version: latest
+      - name: Create Virtual Environment
+        run: uv venv
+      - name: Install Ruff using uv
+        run: uv pip install ruff
+      - name: Lint critical errors with ruff
         run: |
-          python -m pip install --upgrade pip wheel
-          python -m pip install --upgrade flake8 wemake-python-styleguide
-          python -m pip install --upgrade flake8-quotes
-      - name: Lint with flake8
+          uv run ruff check . --select E9,F63,F7,F82
+      - name: Don't mind these (less strict)
         run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-      - name: Don't mind this
-        run: |
-          flake8 . --inline-quotes '"' --count --exit-zero --max-complexity=15 --max-line-length=90 --statistics --select=I,P,WPS305,C812,E203,W503,E800
+          uv run ruff check . --exit-zero --select I,COM812,T201
       - name: Docstrings
         run: |
-          flake8 . --inline-quotes '"' --count --exit-zero --max-complexity=15 --max-line-length=90 --statistics --select=D,DAR
-      - name: Unused stuff
+          uv run ruff check . --exit-zero --select D
+      - name: Unused code warnings
         run: |
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
-          flake8 . --inline-quotes '"' --count --exit-zero --max-complexity=15 --max-line-length=90 --statistics --select=F
+          uv run ruff check . --exit-zero --select F
           echo "Some stuff may not be used, but is used in commented out code."
           echo "Make sure you check with the find command before you remove anything!"
-      - name: General stats
+      - name: General stats, ignoring specific codes
         run: |
-          flake8 . --inline-quotes '"' --count --exit-zero --max-complexity=15 --max-line-length=90 --statistics --ignore=I,P,WPS305,C812,E203,W503,E800,D,DAR,F
+          uv run ruff check . --exit-zero --statistics --ignore I,COM812,T201,D,F

@@ -1,0 +1,7 @@
+[project]
+name = "hass-circadian_lighting"
+dynamic = ["version"]
+requires-python = ">=3.8"
+
+[tool.ruff]
+line-length = 90
