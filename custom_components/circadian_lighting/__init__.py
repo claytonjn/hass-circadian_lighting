@@ -202,6 +202,19 @@ class CircadianLighting:
             sunset = await self._async_replace_time(date, "sunset")
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
+            
+            # The replacement algorithm above keeps the current day,
+            # but changes time to sunrise/sunset. Unfortunately, it
+            # does not account for timezones. For people who's sunset
+            # is after 23:59 UTC (i.e. 01:30), the two events are out
+            # of order in the day.
+            
+            # Fortunately, the nature of the math means that, if
+            # sunrise and sunset are swapped, solar noon and solar
+            # midnight simply end up swapped as well. So we can
+            # simply swap them back if we need to.
+            if (sunset < sunrise):  # Out-of-order sunrise check
+                solar_noon, solar_midnight = solar_midnight, solar_noon
         else:
             _loc = await self.hass.async_add_executor_job(get_astral_location, self.hass)
             if isinstance(_loc, tuple):
