@@ -381,8 +381,10 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
 
-        assert new_state and new_state.state == "on"
-        if old_state is None or old_state.state != "on":
+        light_went_on = (old_state is None or old_state.state != "on") and (
+            new_state and new_state.state == "on"
+        )
+        if light_went_on:
             _LOGGER.debug(_difference_between_states(old_state, new_state))
             await self._force_update_switch(lights=[entity_id])
 
