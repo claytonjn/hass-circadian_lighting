@@ -50,7 +50,10 @@ from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
 )
-from homeassistant.helpers.sun import get_astral_location
+from homeassistant.helpers.sun import (
+    get_astral_observer,
+    get_observer_astral_event_next,
+)
 from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_to_rgb,
@@ -203,37 +206,23 @@ class CircadianLighting:
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
-            _loc = await self.hass.async_add_executor_job(get_astral_location, self.hass)
-            if isinstance(_loc, tuple):
-                # Astral v2.2
-                location, _ = _loc
-            else:
-                # Astral v1
-                location = _loc
-            location.name = "name"
-            location.region = "region"
-            location.latitude = self._latitude
-            location.longitude = self._longitude
-            location.elevation = self._elevation
+            observer = await self.hass.async_add_executor_job(get_astral_observer, self.hass)
+            observer.latitude = self._latitude
+            observer.longitude = self._longitude
+            observer.elevation = self._elevation
 
             if self._manual_sunrise is not None:
                 sunrise = await self._async_replace_time(date, "sunrise")
             else:
-                sunrise = await self.hass.async_add_executor_job(location.sunrise, date)
+                sunrise = await self.hass.async_add_executor_job(get_observer_astral_event_next, observer, "sunrise", date)
 
             if self._manual_sunset is not None:
                 sunset = await self._async_replace_time(date, "sunset")
             else:
-                sunset = await self.hass.async_add_executor_job(location.sunset, date)
+                sunset = await self.hass.async_add_executor_job(get_observer_astral_event_next, observer, "sunset", date)
 
-            try:
-                solar_noon = await self.hass.async_add_executor_job(location.noon, date)
-            except AttributeError:
-                solar_noon = await self.hass.async_add_executor_job(location.solar_noon, date)
-            try:
-                solar_midnight = await self.hass.async_add_executor_job(location.midnight, date)
-            except AttributeError:
-                solar_midnight = await self.hass.async_add_executor_job(location.solar_midnight, date)
+            solar_noon = await self.hass.async_add_executor_job(get_observer_astral_event_next, observer, "noon", date)
+            solar_midnight = await self.hass.async_add_executor_job(get_observer_astral_event_next, observer, "midnight", date)
 
         if self._sunrise_offset is not None:
             sunrise = sunrise + self._sunrise_offset
