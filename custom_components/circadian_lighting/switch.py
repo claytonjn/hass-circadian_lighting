@@ -58,6 +58,8 @@ CONF_DISABLE_ENTITY = "disable_entity"
 CONF_DISABLE_STATE = "disable_state"
 CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION = "initial_transition", 1
 CONF_ONLY_ONCE = "only_once"
+SLEEP_INCLUSIVE_MSG = f"{CONF_SLEEP_ENTITY} and {CONF_SLEEP_STATE} must be set together"
+DISABLE_INCLUSIVE_MSG = f"{CONF_DISABLE_ENTITY} and {CONF_DISABLE_STATE} must be set together"
 
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -74,16 +76,20 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAX_BRIGHT, default=DEFAULT_MAX_BRIGHT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(CONF_SLEEP_ENTITY): cv.entity_id,
-        vol.Optional(CONF_SLEEP_STATE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Inclusive(CONF_SLEEP_ENTITY, "sleep", msg=SLEEP_INCLUSIVE_MSG): cv.entity_id,
+        vol.Inclusive(CONF_SLEEP_STATE, "sleep", msg=SLEEP_INCLUSIVE_MSG): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
         vol.Optional(CONF_SLEEP_CT, default=DEFAULT_SLEEP_CT): vol.All(
             vol.Coerce(int), vol.Range(min=1000, max=10000)
         ),
         vol.Optional(CONF_SLEEP_BRIGHT, default=DEFAULT_SLEEP_BRIGHT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(CONF_DISABLE_ENTITY): cv.entity_id,
-        vol.Optional(CONF_DISABLE_STATE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Inclusive(CONF_DISABLE_ENTITY, "disable", msg=DISABLE_INCLUSIVE_MSG): cv.entity_id,
+        vol.Inclusive(CONF_DISABLE_STATE, "disable", msg=DISABLE_INCLUSIVE_MSG): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
         vol.Optional(
             CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION
         ): VALID_TRANSITION,
