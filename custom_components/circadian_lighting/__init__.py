@@ -156,12 +156,14 @@ class CircadianLighting:
         self._longitude = longitude
         self._elevation = elevation
         self._transition = transition
+        self._hs_color = None
 
     async def _async_init(self, interval):
         self._percent = await self.async_calc_percent()
         self._colortemp = await self.async_calc_colortemp()
         self._rgb_color = await self.async_calc_rgb()
         self._xy_color = await self.async_calc_xy()
+        self._hs_color = await self.async_calc_hs()
 
         if self._manual_sunrise is not None:
             async_track_time_change(
