@@ -29,7 +29,10 @@ Technical notes: I had to make a lot of assumptions when writing this app
 
 import bisect
 from datetime import timedelta
+from functools import partial
 
+from astral import LocationInfo
+from astral.location import Location
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
@@ -50,7 +53,6 @@ from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
 )
-from homeassistant.helpers.sun import get_astral_location
 from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_to_rgb,
@@ -203,28 +205,29 @@ class CircadianLighting:
             solar_noon = sunrise + (sunset - sunrise) / 2
             solar_midnight = sunset + ((sunrise + timedelta(days=1)) - sunset) / 2
         else:
-            _loc = await self.hass.async_add_executor_job(get_astral_location, self.hass)
-            if isinstance(_loc, tuple):
-                # Astral v2.2
-                location, _ = _loc
-            else:
-                # Astral v1
-                location = _loc
-            location.name = "name"
-            location.region = "region"
-            location.latitude = self._latitude
-            location.longitude = self._longitude
-            location.elevation = self._elevation
+            location = Location(
+                LocationInfo(
+                    "name",
+                    "region",
+                    str(self.hass.config.time_zone),
+                    self._latitude,
+                    self._longitude,
+                )
+            )
 
             if self._manual_sunrise is not None:
                 sunrise = await self._async_replace_time(date, "sunrise")
             else:
-                sunrise = await self.hass.async_add_executor_job(location.sunrise, date)
+                sunrise = await self.hass.async_add_executor_job(
+                    partial(location.sunrise, date, observer_elevation=self._elevation)
+                )
 
             if self._manual_sunset is not None:
                 sunset = await self._async_replace_time(date, "sunset")
             else:
-                sunset = await self.hass.async_add_executor_job(location.sunset, date)
+                sunset = await self.hass.async_add_executor_job(
+                    partial(location.sunset, date, observer_elevation=self._elevation)
+                )
 
             try:
                 solar_noon = await self.hass.async_add_executor_job(location.noon, date)
