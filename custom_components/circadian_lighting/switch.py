@@ -26,7 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Event, EventStateChangedData
+from homeassistant.core import CoreState, Event, EventStateChangedData
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -58,6 +58,8 @@ CONF_DISABLE_ENTITY = "disable_entity"
 CONF_DISABLE_STATE = "disable_state"
 CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION = "initial_transition", 1
 CONF_ONLY_ONCE = "only_once"
+SLEEP_INCLUSIVE_MSG = f"{CONF_SLEEP_ENTITY} and {CONF_SLEEP_STATE} must be set together"
+DISABLE_INCLUSIVE_MSG = f"{CONF_DISABLE_ENTITY} and {CONF_DISABLE_STATE} must be set together"
 
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -74,16 +76,20 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAX_BRIGHT, default=DEFAULT_MAX_BRIGHT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(CONF_SLEEP_ENTITY): cv.entity_id,
-        vol.Optional(CONF_SLEEP_STATE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Inclusive(CONF_SLEEP_ENTITY, "sleep", msg=SLEEP_INCLUSIVE_MSG): cv.entity_id,
+        vol.Inclusive(CONF_SLEEP_STATE, "sleep", msg=SLEEP_INCLUSIVE_MSG): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
         vol.Optional(CONF_SLEEP_CT, default=DEFAULT_SLEEP_CT): vol.All(
             vol.Coerce(int), vol.Range(min=1000, max=10000)
         ),
         vol.Optional(CONF_SLEEP_BRIGHT, default=DEFAULT_SLEEP_BRIGHT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(CONF_DISABLE_ENTITY): cv.entity_id,
-        vol.Optional(CONF_DISABLE_STATE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Inclusive(CONF_DISABLE_ENTITY, "disable", msg=DISABLE_INCLUSIVE_MSG): cv.entity_id,
+        vol.Inclusive(CONF_DISABLE_STATE, "disable", msg=DISABLE_INCLUSIVE_MSG): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
         vol.Optional(
             CONF_INITIAL_TRANSITION, default=DEFAULT_INITIAL_TRANSITION
         ): VALID_TRANSITION,
@@ -200,6 +206,7 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._disable_state = disable_state
         self._initial_transition = initial_transition
         self._only_once = only_once
+        self._warned_missing = False
         self._lights_types = dict(zip(lights_ct, repeat("ct")))
         self._lights_types.update(zip(lights_rgb, repeat("rgb")))
         self._lights_types.update(zip(lights_xy, repeat("xy")))
@@ -275,10 +282,15 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
         self._hs_color = None
         self._brightness = None
 
+    def _entity_state(self, entity_id):
+        """Return an entity's state, or None if it has not been loaded yet."""
+        state = self.hass.states.get(entity_id)
+        return None if state is None else state.state
+
     def _is_sleep(self):
         return (
             self._sleep_entity is not None
-            and self.hass.states.get(self._sleep_entity).state in self._sleep_state
+            and self._entity_state(self._sleep_entity) in self._sleep_state
         )
 
     def _color_temperature(self):
@@ -323,11 +335,38 @@ class CircadianSwitch(SwitchEntity, RestoreEntity):
     def _is_disabled(self):
         return (
             self._disable_entity is not None
-            and self.hass.states.get(self._disable_entity).state in self._disable_state
+            and self._entity_state(self._disable_entity) in self._disable_state
         )
+
+    def _is_waiting_for_entities(self):
+        """Return True while the sleep or disable entity has not loaded yet.
+
+        During startup they may be added after this switch. Lights are not
+        adjusted until they appear, and their first state change triggers an
+        update. Once Home Assistant has started, a missing entity is ignored.
+        """
+        missing = [
+            entity_id
+            for entity_id in (self._sleep_entity, self._disable_entity)
+            if entity_id is not None and self.hass.states.get(entity_id) is None
+        ]
+        if not missing:
+            return False
+        if self.hass.state is not CoreState.running:
+            return True
+        if not self._warned_missing:
+            self._warned_missing = True
+            _LOGGER.warning(
+                "%s: %s not found, continuing without it",
+                self._name,
+                ", ".join(missing),
+            )
+        return False
 
     def _should_adjust(self):
         if self._state is not True:
+            return False
+        if self._is_waiting_for_entities():
             return False
         if self._is_disabled():
             return False
